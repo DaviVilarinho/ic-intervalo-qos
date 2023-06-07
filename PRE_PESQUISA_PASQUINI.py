@@ -8,14 +8,17 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import os
 import numpy as np
+import datetime
 from sklearn.metrics import mean_squared_error
 
 BASE_DIR = "../"
 PASQUINIS_PATH = BASE_DIR + "traces-netsoft-2017"
-RESULTS_VIDEO_PATH = "./resultados_pre_pesquisa/resultado_linhas_video.txt"
-RESULTS_AUDIO_PATH = "./resultados_pre_pesquisa/resultado_linhas_audio.txt"
-INTERVAL_VIDEO_PATH = "./resultados_pre_pesquisa/resultado_intervalos_video.txt"
-INTERVAL_AUDIO_PATH = "./resultados_pre_pesquisa/resultado_intervalos_audio.txt"
+DATE = datetime.datetime.now().isoformat()
+BASE_RESULTS_PATH = f'./resultados_pre_pesquisa/{DATE}'
+RESULTS_VIDEO_PATH =  BASE_RESULTS_PATH + "/" + "resultado_linhas_video.txt"
+RESULTS_AUDIO_PATH =  BASE_RESULTS_PATH + "/" + "resultado_linhas_audio.txt"
+INTERVAL_VIDEO_PATH = BASE_RESULTS_PATH + "/" + "resultado_intervalos_video.txt"
+INTERVAL_AUDIO_PATH = BASE_RESULTS_PATH + "/" + "resultado_intervalos_audio.txt"
 
 TRACES=[
     #"KV-BothApps-FlashcrowdLoad",
@@ -28,8 +31,15 @@ TRACES=[
     "VoD-SingleApp-PeriodicLoad"]
 
 def start_results_file(path):
+    try:
+        os.mkdir(BASE_RESULTS_PATH)
+    except FileExistsError:
+        print("Já criado diretório...")
     with open(path, 'w') as logger:
-        logger.write(f'quantidade_linhas, predict_random_forest, regression_tree\n')
+        logger.write(f'parameter, predict_random_forest, regression_tree\n')
+
+def nmae(y_pred, y_test):
+    return abs(y_pred - y_test).mean() / y_test.mean()
 
 def get_nmae_and_predict_random_and_regression(X, Y) -> tuple:
     X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.7, random_state=42)
@@ -43,7 +53,7 @@ def get_nmae_and_predict_random_and_regression(X, Y) -> tuple:
     y_random_forest = regr_random_forest.predict(X_test)
     y_reg_tree = regression_tree.predict(X_test)
     
-    return (mean_squared_error(y_test, y_random_forest), mean_squared_error(y_test, y_reg_tree))
+    return (nmae(y_random_forest, y_test), nmae(y_reg_tree, y_test))
 
 def save_results(path, key=None, random_forest=None, regression_tree=None):
     with open(path, 'a+') as logger:
@@ -55,7 +65,7 @@ def read_traces(traces, NROWS=None):
     for root, subfolders, files in os.walk(traces):
         for file in files:
             if file.find("csv") >= 0:
-                csvs[file] = pd.read_csv(f'{root}/{file}', nrows=28500)
+                csvs[file] = pd.read_csv(f'{root}/{file}', nrows=NROWS)
 
     return csvs
 
@@ -92,16 +102,17 @@ def main_different_sizes():
     start_results_file(RESULTS_AUDIO_PATH)
     start_results_file(RESULTS_VIDEO_PATH)
 
-    for NROWS in [1e3, 2e3, 4e3, 8e3, 16e3, 28950]:
+    for NROWS in [None]:
         VOD_SINGLEAPP_PERIODIC_LOAD = read_traces(f'{PASQUINIS_PATH}/VoD-SingleApp-PeriodicLoad', NROWS)
 
         X, y = cria_x_y(VOD_SINGLEAPP_PERIODIC_LOAD)
 
+        NROWS = 'todas_linhas'
         random_forest_nmae, regression_tree_nmae = get_nmae_and_predict_random_and_regression(X, y['DispFrames'])
         save_results(RESULTS_VIDEO_PATH, key=NROWS, random_forest=random_forest_nmae, regression_tree=regression_tree_nmae)
         random_forest_nmae, regression_tree_nmae = get_nmae_and_predict_random_and_regression(X, y['noAudioPlayed'])
         save_results(RESULTS_AUDIO_PATH, key=NROWS, random_forest=random_forest_nmae, regression_tree=regression_tree_nmae)
 
 if __name__ == "__main__":
-    #main_different_sizes()
-    main_intervals()
+    main_different_sizes()
+    #main_intervals()
