@@ -7,12 +7,15 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import os
 import numpy as np
+import joblib
 from datetime import datetime
 
 BASE_DIR = "../"
 PASQUINIS_PATH = BASE_DIR + "traces-netsoft-2017"
 DATE = datetime.now().isoformat(timespec='seconds')
 BASE_RESULTS_PATH = f'./resultados_pre_pesquisa/{DATE}'
+MODELS_DIR = "models/"
+MODELS_PATH_PREFIX = f'models/{DATE}_'
 
 TRACES=[
     #"KV-BothApps-FlashcrowdLoad",
@@ -28,13 +31,20 @@ def nmae(y_pred, y_test):
     return abs(y_pred - y_test).mean() / y_test.mean()
 
 def get_nmae_random_forest_regression_tree(X, Y) -> tuple:
+    print("Splitando em testes")
     X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.7, random_state=42)
     
+    print("Treinando Decision tree")
     regression_tree = DecisionTreeRegressor() # a classification or regression decision tree is used as a predictive model to draw conclusions about a set of observations. 
     regression_tree.fit(X_train, y_train)
 
+    joblib.dump(regression_tree, f'{MODELS_PATH_PREFIX}_model_regression-tree.sav')
+
+    print("Treinando random forest")
     regr_random_forest = RandomForestRegressor(n_estimators=120, random_state=0)
     regr_random_forest.fit(X_train, y_train)
+
+    joblib.dump(regr_random_forest, f'{MODELS_PATH_PREFIX}_model_random-forest.sav')
 
     y_random_forest = regr_random_forest.predict(X_test)
     y_reg_tree = regression_tree.predict(X_test)
@@ -64,12 +74,13 @@ def filter_correlation(x, y, correlation_min):
     
 
 def main():
-    NROWS = 2800
+    NROWS = 400
     VOD_SINGLEAPP_PERIODIC_LOAD = read_traces(f'{PASQUINIS_PATH}/VoD-SingleApp-PeriodicLoad', NROWS)
 
     results_path = f'{BASE_RESULTS_PATH}_n{NROWS}'
     try:
         os.mkdir(results_path)
+        os.mkdir(MODELS_DIR)
     except FileExistsError:
         print("Já criado diretório...")
 
