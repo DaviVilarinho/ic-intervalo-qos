@@ -41,7 +41,7 @@ def get_nmae_random_forest_regression_tree(X, Y) -> tuple:
     joblib.dump(regression_tree, f'{MODELS_PATH_PREFIX}_model_regression-tree.sav')
 
     print("Treinando random forest")
-    regr_random_forest = RandomForestRegressor(n_estimators=120, random_state=0)
+    regr_random_forest = RandomForestRegressor(n_estimators=120, random_state=0, n_jobs=1)
     regr_random_forest.fit(X_train, y_train)
 
     joblib.dump(regr_random_forest, f'{MODELS_PATH_PREFIX}_model_random-forest.sav')
@@ -63,7 +63,7 @@ def read_traces(traces, NROWS=None):
     return csvs
 
 def cria_x_y(csvs_map: dict):
-    return (pd.concat([csvs_map["X_flow.csv"], csvs_map["X_cluster.csv"], csvs_map["X_port.csv"]], axis=1).apply(pd.to_numeric, errors='coerce').fillna(0),
+    return (pd.merge_asof(pd.merge_asof(csvs_map["X_flow.csv"], csvs_map["X_cluster.csv"], on='TimeStamp', direction="forward"), csvs_map["X_port.csv"], on='TimeStamp', direction="forward").apply(pd.to_numeric, errors='coerce').fillna(0),
             csvs_map["Y.csv"].apply(pd.to_numeric, errors='coerce').fillna(0))
 
 def filter_correlation(x, y, correlation_min):
