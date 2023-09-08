@@ -9,7 +9,6 @@ import os
 import numpy as np
 import joblib
 from datetime import datetime
-from functools import reduce
 import concurrent
 
 BASE_DIR = "../"
@@ -43,7 +42,7 @@ def get_nmae_random_forest_regression_tree(X, Y) -> tuple:
     joblib.dump(regression_tree, f'{MODELS_PATH_PREFIX}_model_regression-tree.sav')
 
     print("Treinando random forest")
-    regr_random_forest = RandomForestRegressor(n_estimators=120, random_state=0, n_jobs=1)
+    regr_random_forest = RandomForestRegressor(n_estimators=120, random_state=42, n_jobs=-1)
     regr_random_forest.fit(X_train, y_train)
 
     joblib.dump(regr_random_forest, f'{MODELS_PATH_PREFIX}_model_random-forest.sav')
@@ -82,16 +81,24 @@ def main():
                       ('correlacao-0-2', 0.2),
                       ('correlacao-0-1', 0.1)]
 
-    for nome_teste, correlation in casos_de_teste:
-        results_path = f'{BASE_RESULTS_PATH}'
-        try:
-            os.makedirs(results_path)
-            os.makedirs(MODELS_DIR)
-        except FileExistsError:
-            print("Já criado diretório...")
+    results_path = f'{BASE_RESULTS_PATH}'
+    try:c
+        os.makedirs(results_path)
+        os.makedirs(MODELS_DIR)
+    except FileExistsError:
+        print("Já criado diretório...")
 
-        video_results_path = results_path + '/' + 'resultado_video.txt'
-        video_correlated_columns_path = results_path + '/' + f'columns_with_abscorr_greater_{correlation}.txt'
+
+    video_results_path = results_path + '/' + 'resultado_video.txt'
+    video_correlated_columns_path = results_path + '/' + f'columns_with_abscorr.txt'
+
+    with open(video_results_path, 'w') as logger:
+        logger.write(f'case_with_NROWS_{NROWS}, nmae_random_forest, nmae_regression_tree\n')
+
+    with open(video_correlated_columns_path, 'w') as logger:
+        logger.write(f'correlation_with_NROWS_{NROWS}\t\t columns\n')
+
+    for nome_teste, correlation in casos_de_teste:
 
         y_dataset = pd.read_csv(f'{VOD_SINGLEAPP_PERIODIC_LOAD_PATH}/Y.csv', nrows=NROWS, index_col=0, usecols=['TimeStamp', 'DispFrames'], low_memory=True).apply(pd.to_numeric, errors='coerce').fillna(0)
 
@@ -113,18 +120,13 @@ def main():
 
         x_trace = x_trace.dropna(axis=1, how='all')
 
-        with open(video_results_path, 'w') as logger:
-            logger.write(f'case_with_NROWS_{NROWS}, nmae_random_forest, nmae_regression_tree\n')
-
-        with open(video_correlated_columns_path, 'w') as logger:
-            logger.write(f'correlation_with_NROWS_{NROWS}\t\t columns\n')
-
         rand, reg = get_nmae_random_forest_regression_tree(x_trace, y_dataset['DispFrames'])
 
         with open(video_results_path, 'a+') as logger:
             logger.write(f'{nome_teste}, {rand}, {reg}\n')
         with open(video_correlated_columns_path, 'a+') as logger:
             logger.write(f'{correlation}\t\t {x_trace.columns.to_list()}\n')
+        x_trace.to_csv(f'{results_path}/X_dataframe_min_correlation_{correlation}.csv')
         #['noAudioPlayed']
 
 if __name__ == "__main__":

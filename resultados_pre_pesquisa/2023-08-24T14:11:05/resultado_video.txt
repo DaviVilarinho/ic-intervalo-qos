@@ -1,0 +1,2 @@
+case_with_NROWS_1000, nmae_random_forest, nmae_regression_tree
+correlacao-0-1, 0.16047214129231885, 0.16816857510671457

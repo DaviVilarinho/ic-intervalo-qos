@@ -74,10 +74,9 @@ def filter_correlation(x, y, correlation_min):
     
 
 def main():
-    NROWS = 400
-    VOD_SINGLEAPP_PERIODIC_LOAD = read_traces(f'{PASQUINIS_PATH}/VoD-SingleApp-PeriodicLoad', NROWS)
+    VOD_SINGLEAPP_PERIODIC_LOAD = read_traces(f'{PASQUINIS_PATH}/VoD-SingleApp-PeriodicLoad')
 
-    results_path = f'{BASE_RESULTS_PATH}_n{NROWS}'
+    results_path = f'{BASE_RESULTS_PATH}'
     try:
         os.mkdir(results_path)
         os.mkdir(MODELS_DIR)
