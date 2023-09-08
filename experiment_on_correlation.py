@@ -82,7 +82,7 @@ def main():
                       ('correlacao-0-1', 0.1)]
 
     results_path = f'{BASE_RESULTS_PATH}'
-    try:c
+    try:
         os.makedirs(results_path)
         os.makedirs(MODELS_DIR)
     except FileExistsError:
@@ -99,7 +99,6 @@ def main():
         logger.write(f'correlation_with_NROWS_{NROWS}\t\t columns\n')
 
     for nome_teste, correlation in casos_de_teste:
-
         y_dataset = pd.read_csv(f'{VOD_SINGLEAPP_PERIODIC_LOAD_PATH}/Y.csv', nrows=NROWS, index_col=0, usecols=['TimeStamp', 'DispFrames'], low_memory=True).apply(pd.to_numeric, errors='coerce').fillna(0)
 
         x_files = ['X_cluster.csv', 'X_flow.csv', 'X_port.csv']
