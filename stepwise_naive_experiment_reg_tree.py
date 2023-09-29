@@ -52,7 +52,7 @@ x_files = ['X_cluster.csv', 'X_flow.csv', 'X_port.csv']
 x_trace = pd.DataFrame()
 
 for x_file in x_files:
-    read_dataset = pd.read_csv(f'{VOD_SINGLEAPP_PERIODIC_LOAD_PATH}/{x_file}', 
+    read_dataset = pd.read_csv(f'{VOD_SINGLEAPP_PERIODIC_LOAD_PATH}/{x_file}',
                               header=0, index_col=0, low_memory=True, nrows=NROWS).apply(pd.to_numeric, errors='coerce').fillna(0)
     if len(x_trace.columns) != 0:
         x_trace.merge(read_dataset, how="inner",
@@ -63,11 +63,12 @@ for x_file in x_files:
 #minimal dataset creation
 import warnings 
 
-warnings.filterwarnings('ignore')
-
+"""
 x_trace_corrwith_y_metric = abs(x_trace.corrwith(y_dataset[Y_METRIC]))
 x_trace_corrwith_y_metric.fillna(0, inplace=True)
 x_trace_corrwith_y_metric.sort_values(inplace=True, ascending=False)
+"""
+warnings.filterwarnings('ignore')
 
 time_to_build_minimal_dataset = time.time()
 #training only with reg tree
@@ -75,8 +76,11 @@ time_to_build_minimal_dataset = time.time()
 old_reg_tree_nmae = 1
 x_trace_minimal_reg_tree = pd.DataFrame()
 while True:
-    nmae_appending_feature_to_the_combination = {feature: 1 for feature in list(filter(lambda f: f not in x_trace_minimal_reg_tree.columns, x_trace_corrwith_y_metric.index))}
-    for feature in x_trace_corrwith_y_metric.index:
+    features_available = list(filter(lambda f: f not in x_trace_minimal_reg_tree.columns, x_trace.columns))
+    if len(features_available) == 0:
+        break
+    nmae_appending_feature_to_the_combination = {feature: 1 for feature in features_available}
+    for feature in features_available:
         x_trace_minimal_reg_tree[feature] = x_trace[[feature]].copy()
 
         X_train_minimal , X_test_minimal, y_train_minimal, y_test_minimal = train_test_split(x_trace_minimal_reg_tree, y_dataset, test_size=0.7, random_state=42)
