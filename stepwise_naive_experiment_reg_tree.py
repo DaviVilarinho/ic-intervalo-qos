@@ -65,31 +65,40 @@ import warnings
 
 warnings.filterwarnings('ignore')
 
-x_trace_minimal_reg_tree = pd.DataFrame()
-old_reg_tree_nmae = 1
-old_random_forest_nmae = 1
-
 x_trace_corrwith_y_metric = abs(x_trace.corrwith(y_dataset[Y_METRIC]))
 x_trace_corrwith_y_metric.fillna(0, inplace=True)
 x_trace_corrwith_y_metric.sort_values(inplace=True, ascending=False)
 
 time_to_build_minimal_dataset = time.time()
 #training only with reg tree
-for feature in x_trace_corrwith_y_metric.index:
-    x_trace_minimal_reg_tree[feature] = x_trace[[feature]].copy()
+## stepwise selection algorithm
+old_reg_tree_nmae = 1
+x_trace_minimal_reg_tree = pd.DataFrame()
+while True:
+    nmae_appending_feature_to_the_combination = {feature: 1 for feature in list(filter(lambda f: f not in x_trace_minimal_reg_tree.index, x_trace_corrwith_y_metric.index))}
+    for feature in x_trace_corrwith_y_metric.index:
+        x_trace_minimal_reg_tree[feature] = x_trace[[feature]].copy()
 
-    X_train_minimal , X_test_minimal, y_train_minimal, y_test_minimal = train_test_split(x_trace_minimal_reg_tree, y_dataset, test_size=0.7, random_state=42)
+        X_train_minimal , X_test_minimal, y_train_minimal, y_test_minimal = train_test_split(x_trace_minimal_reg_tree, y_dataset, test_size=0.7, random_state=42)
 
-    regression_tree_minimal = DecisionTreeRegressor() 
-    regression_tree_minimal.fit(X_train_minimal, y_train_minimal)
-    pred_reg_tree_minimal = regression_tree_minimal.predict(X_test_minimal)
+        regression_tree_minimal = DecisionTreeRegressor() 
+        regression_tree_minimal.fit(X_train_minimal, y_train_minimal)
+        pred_reg_tree_minimal = regression_tree_minimal.predict(X_test_minimal)
 
-    new_nmae_reg_tree = nmae(pred_reg_tree_minimal, y_test_minimal[Y_METRIC])
+        nmae_appending_feature_to_the_combination[feature] = nmae(pred_reg_tree_minimal, y_test_minimal[Y_METRIC])
 
-    if old_reg_tree_nmae >= new_nmae_reg_tree:
-        old_reg_tree_nmae = new_nmae_reg_tree
-    else:
         x_trace_minimal_reg_tree.drop([feature], axis=1, inplace=True)
+
+    lowest_nmae_from_appending = min(nmae_appending_feature_to_the_combination, key=nmae_appending_feature_to_the_combination.get)
+    if nmae_appending_feature_to_the_combination[lowest_nmae_from_appending] < old_reg_tree_nmae:
+        break
+
+    print(f'Appending {lowest_nmae_from_appending} because the NMAE with it {nmae_appending_feature_to_the_combination[lowest_nmae_from_appending]} < {old_reg_tree_nmae}.')
+    old_reg_tree_nmae = nmae_appending_feature_to_the_combination[lowest_nmae_from_appending]
+    x_trace_minimal_reg_tree[lowest_nmae_from_appending] = x_trace[[lowest_nmae_from_appending]].copy()
+
+
+## end of  stepwise selection
 time_to_build_minimal_dataset = time.time() - time_to_build_minimal_dataset
 
 print(len(x_trace_minimal_reg_tree.columns))
