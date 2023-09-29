@@ -75,7 +75,7 @@ time_to_build_minimal_dataset = time.time()
 old_reg_tree_nmae = 1
 x_trace_minimal_reg_tree = pd.DataFrame()
 while True:
-    nmae_appending_feature_to_the_combination = {feature: 1 for feature in list(filter(lambda f: f not in x_trace_minimal_reg_tree.index, x_trace_corrwith_y_metric.index))}
+    nmae_appending_feature_to_the_combination = {feature: 1 for feature in list(filter(lambda f: f not in x_trace_minimal_reg_tree.columns, x_trace_corrwith_y_metric.index))}
     for feature in x_trace_corrwith_y_metric.index:
         x_trace_minimal_reg_tree[feature] = x_trace[[feature]].copy()
 
@@ -101,7 +101,8 @@ while True:
 ## end of  stepwise selection
 time_to_build_minimal_dataset = time.time() - time_to_build_minimal_dataset
 
-print(len(x_trace_minimal_reg_tree.columns))
+print(f'Tempo para construir minimal dataset {time_to_build_minimal_dataset}')
+print(len(columns.x_trace_minimal_reg_tree))
 print(x_trace_minimal_reg_tree.columns)
 
 X_train_minimal , X_test_minimal, y_train_minimal, y_test_minimal = train_test_split(x_trace_minimal_reg_tree, y_dataset, test_size=0.7, random_state=42)
