@@ -102,7 +102,7 @@ while True:
 time_to_build_minimal_dataset = time.time() - time_to_build_minimal_dataset
 
 print(f'Tempo para construir minimal dataset {time_to_build_minimal_dataset}')
-print(len(columns.x_trace_minimal_reg_tree))
+print(len(x_trace_minimal_reg_tree.columns))
 print(x_trace_minimal_reg_tree.columns)
 
 X_train_minimal , X_test_minimal, y_train_minimal, y_test_minimal = train_test_split(x_trace_minimal_reg_tree, y_dataset, test_size=0.7, random_state=42)
