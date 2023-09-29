@@ -81,7 +81,7 @@ while True:
 
         X_train_minimal , X_test_minimal, y_train_minimal, y_test_minimal = train_test_split(x_trace_minimal_reg_tree, y_dataset, test_size=0.7, random_state=42)
 
-        regression_tree_minimal = DecisionTreeRegressor() 
+        regression_tree_minimal = DecisionTreeRegressor()
         regression_tree_minimal.fit(X_train_minimal, y_train_minimal)
         pred_reg_tree_minimal = regression_tree_minimal.predict(X_test_minimal)
 
@@ -90,7 +90,7 @@ while True:
         x_trace_minimal_reg_tree.drop([feature], axis=1, inplace=True)
 
     lowest_nmae_from_appending = min(nmae_appending_feature_to_the_combination, key=nmae_appending_feature_to_the_combination.get)
-    if nmae_appending_feature_to_the_combination[lowest_nmae_from_appending] < old_reg_tree_nmae:
+    if nmae_appending_feature_to_the_combination[lowest_nmae_from_appending] > old_reg_tree_nmae:
         break
 
     print(f'Appending {lowest_nmae_from_appending} because the NMAE with it {nmae_appending_feature_to_the_combination[lowest_nmae_from_appending]} < {old_reg_tree_nmae}.')
@@ -106,7 +106,7 @@ print(x_trace_minimal_reg_tree.columns)
 
 X_train_minimal , X_test_minimal, y_train_minimal, y_test_minimal = train_test_split(x_trace_minimal_reg_tree, y_dataset, test_size=0.7, random_state=42)
 
-regression_tree_minimal = DecisionTreeRegressor() 
+regression_tree_minimal = DecisionTreeRegressor()
 
 tempo_reg_tree_minimal = time.time()
 regression_tree_minimal.fit(X_train_minimal, y_train_minimal)
