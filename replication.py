@@ -31,7 +31,7 @@ traces = {
     "KV-SingleApp-PeriodicLoad"]
 }
 
-NROWS = 100
+NROWS = 100 if IS_LOCAL else None
 
 def nmae(y_pred, y_test):
     return abs(y_pred - y_test).mean() / y_test.mean()
