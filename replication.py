@@ -36,6 +36,35 @@ NROWS = 100
 def nmae(y_pred, y_test):
     return abs(y_pred - y_test).mean() / y_test.mean()
 
+def stepwise_selection(x_trace, y_dataset, y_metric, regressor):
+    old_reg_tree_nmae = 1
+    x_trace_minimal = pd.DataFrame()
+    while True:
+        features_available = list(filter(lambda f: f not in x_trace_minimal.columns, x_trace.columns))
+        if len(features_available) == 0:
+            break
+        nmae_appending_feature_to_the_combination = {feature: 1 for feature in features_available}
+        for feature in features_available:
+            x_trace_minimal[feature] = x_trace[[feature]].copy()
+
+            x_train_minimal , x_test_minimal, y_train_minimal, y_test_minimal = train_test_split(x_trace_minimal, y_dataset, test_size=0.7, random_state=42)
+
+            regressor.fit(x_train_minimal, y_train_minimal)
+            pred_reg_tree_minimal = regressor.predict(x_test_minimal)
+
+            nmae_appending_feature_to_the_combination[feature] = nmae(pred_reg_tree_minimal, y_test_minimal[y_metric])
+
+            x_trace_minimal.drop([feature], axis=1, inplace=True)
+
+        lowest_nmae_from_appending = min(nmae_appending_feature_to_the_combination, key=nmae_appending_feature_to_the_combination.get)
+        if nmae_appending_feature_to_the_combination[lowest_nmae_from_appending] > old_reg_tree_nmae:
+            break
+
+        print(f'Appending {lowest_nmae_from_appending} because the NMAE with it is {nmae_appending_feature_to_the_combination[lowest_nmae_from_appending]} < {old_reg_tree_nmae} (old).')
+        old_reg_tree_nmae = nmae_appending_feature_to_the_combination[lowest_nmae_from_appending]
+        x_trace_minimal[lowest_nmae_from_appending] = x_trace[[lowest_nmae_from_appending]].copy()
+    return x_trace_minimal
+
 results_path = f'{BASE_RESULTS_PATH}'
 for paths in [results_path]:
     try:
@@ -137,23 +166,23 @@ for trace_family, traces in traces.items():
                 x_trace_per_dataset = pd.read_csv(f'{PASQUINIS_PATH}/{trace}/{x_file}', 
                                         header=0, index_col=0, low_memory=True, nrows=NROWS).apply(pd.to_numeric, errors='coerce').fillna(0)
 
-                x_train_flow, x_test_flow, y_train_flow, y_test_per_dataset = train_test_split(x_trace_per_dataset, y_dataset, test_size=0.7, random_state=42)
+                x_train_flow, x_test_per_dataset, y_train_per_dataset, y_test_per_dataset = train_test_split(x_trace_per_dataset, y_dataset, test_size=0.7, random_state=42)
 
-                regression_tree_flow = DecisionTreeRegressor() 
+                regression_tree_per_dataset = DecisionTreeRegressor() 
 
                 time_reg_tree_per_dataset = time.time()
-                regression_tree_flow.fit(x_train_flow, y_train_flow)
+                regression_tree_per_dataset.fit(x_train_flow, y_train_per_dataset)
                 time_reg_tree_per_dataset = time.time() - time_reg_tree_per_dataset
 
-                pred_reg_tree_per_dataset = regression_tree_flow.predict(x_test_flow)
+                pred_reg_tree_per_dataset = regression_tree_per_dataset.predict(x_test_per_dataset)
 
                 regr_random_forest_per_dataset = RandomForestRegressor(n_estimators=120, random_state=42, n_jobs=-1)
 
                 time_random_forest_per_dataset = time.time()
-                regr_random_forest_per_dataset.fit(x_train_flow, y_train_flow)
+                regr_random_forest_per_dataset.fit(x_train_flow, y_train_per_dataset)
                 time_random_forest_per_dataset = time.time() - time_random_forest_per_dataset
 
-                pred_random_forest_flow = regr_random_forest_per_dataset.predict(x_test_flow)
+                pred_random_forest_flow = regr_random_forest_per_dataset.predict(x_test_per_dataset)
                 with open(per_dataset_file, 'a') as f:
                     f.write(f'{nmae(pred_reg_tree_per_dataset, y_test_per_dataset[y_metric])},{time_reg_tree_per_dataset}, {nmae(pred_random_forest_flow, y_test_per_dataset[y_metric])},{time_random_forest_per_dataset},\n')
 
@@ -196,9 +225,33 @@ for trace_family, traces in traces.items():
             pred_random_forest_total = random_forest_regressor.predict(x_total_test)
 
             with open(total_X_file_path, 'a') as f:
-                f.write(f'{nmae(pred_reg_tree_total, y_total_test[y_metric])},{training_total_reg_tree_time}, {nmae(pred_random_forest_total, y_test_per_dataset[y_metric])},{random_forest_total_X_training_time},\n')
+                f.write(f'{nmae(pred_reg_tree_total, y_total_test[y_metric])},{training_total_reg_tree_time}, {nmae(pred_random_forest_total, y_total_test[y_metric])},{random_forest_total_X_training_time},\n')
+
             ## minimal
+            for regressor in [DecisionTreeRegressor(), RandomForestRegressor(n_estimators=120, random_state=42, n_jobs=-1)]:
+                minimal_stepwise_path = f'{BASE_RESULTS_PATH}/{trace}_{y_metric}_minimal_with_{type(regressor).__name__}.csv'
+                with open(minimal_stepwise_path, 'w') as f:
+                    f.write(f'regression_tree_{y_metric}_minimal_{type(regressor).__name__}_nmae,time_to_train_regression_tree_s,random_forest_{y_metric}_minimal_{type(regressor).__name__}_nmae,time_to_train_random_forest_s,\n')
 
-            ### reg tree
+                minimal_dataset = stepwise_selection(x_trace, y_dataset, y_metric, regressor)
 
-            ### random forest
+                x_minimal_train, x_minimal_test, y_minimal_train, y_minimal_test = train_test_split(minimal_dataset, y_dataset, test_size=0.7, random_state=42)
+
+                regression_tree = DecisionTreeRegressor() 
+
+                training_minimal_reg_tree_time = time.time()
+                regression_tree.fit(x_minimal_train, y_minimal_train)
+                training_minimal_reg_tree_time = time.time() - training_minimal_reg_tree_time
+
+                pred_reg_tree_minimal = regression_tree.predict(x_minimal_test)
+
+                random_forest_regressor = RandomForestRegressor(n_estimators=120, random_state=42, n_jobs=-1)
+
+                random_forest_minimal_training_time = time.time()
+                random_forest_regressor.fit(x_minimal_train, y_minimal_train)
+                random_forest_minimal_training_time = time.time() - random_forest_minimal_training_time
+
+                pred_random_forest_minimal = random_forest_regressor.predict(x_minimal_test)
+
+                with open(minimal_stepwise_path, 'a') as f:
+                    f.write(f'{nmae(pred_reg_tree_minimal, y_minimal_test[y_metric])},{training_minimal_reg_tree_time}, {nmae(pred_random_forest_minimal, y_minimal_test[y_metric])},{random_forest_minimal_training_time},\n')
