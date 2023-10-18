@@ -161,6 +161,42 @@ for trace_family, traces in traces.items():
 
             ## total
 
+            total_X_file_path = f'{BASE_RESULTS_PATH}/{trace}_{y_metric}_X.csv'
+            with open(total_X_file_path, 'w') as f:
+                f.write(f'regression_tree_{y_metric}_X_nmae,time_to_train_regression_tree_s,random_forest_{y_metric}_X_nmae,time_to_train_random_forest_s,\n')
+            x_files = ['X_cluster.csv', 'X_flow.csv', 'X_port.csv']
+
+            x_trace = pd.DataFrame()
+
+            for x_file in x_files:
+                x_trace_per_dataset = pd.read_csv(f'{PASQUINIS_PATH}/{trace}/{x_file}', 
+                                        header=0, index_col=0, low_memory=True, nrows=NROWS).apply(pd.to_numeric, errors='coerce').fillna(0)
+                if len(x_trace.columns) != 0:
+                    x_trace.merge(read_dataset, how="inner",
+                        on="TimeStamp", copy=False)
+                else:
+                    x_trace = read_dataset
+
+            x_total_train, x_total_test, y_total_train, y_total_test = train_test_split(x_trace, y_dataset, test_size=0.7, random_state=42)
+
+            regression_tree = DecisionTreeRegressor() 
+
+            training_total_reg_tree_time = time.time()
+            regression_tree.fit(x_total_train, y_total_train)
+            training_total_reg_tree_time = time.time() - training_total_reg_tree_time
+
+            pred_reg_tree_total = regression_tree.predict(x_total_test)
+
+            random_forest_regressor = RandomForestRegressor(n_estimators=120, random_state=42, n_jobs=-1)
+
+            random_forest_total_X_training_time = time.time()
+            random_forest_regressor.fit(x_total_train, y_total_train)
+            random_forest_total_X_training_time = time.time() - random_forest_total_X_training_time
+
+            pred_random_forest_total = random_forest_regressor.predict(x_total_test)
+
+            with open(total_X_file_path, 'a') as f:
+                f.write(f'{nmae(pred_reg_tree_total, y_total_test[y_metric])},{training_total_reg_tree_time}, {nmae(pred_random_forest_total, y_test_per_dataset[y_metric])},{random_forest_total_X_training_time},\n')
             ## minimal
 
             ### reg tree
