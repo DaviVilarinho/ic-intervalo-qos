@@ -1,3 +1,5 @@
+
+# NOTE: este script foi importado do jupyter, por isso pode parecer mais imperativo que bem estruturado
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
 import matplotlib.pyplot as plt

@@ -1,3 +1,11 @@
+# NOTICE: This experiment was imported from Jupyter
+## That's why you may found it a little bit less "functional" and more "imperative"
+## The objetive is merely to test if correlation is sufficient to create the minimal feature set
+## Plot twist: is not, use univariate/stepwise (although I would suggest you univariate) 
+
+# NOTE: esse experimento foi trago do jupyter, por isso ele parece mais imperativo que funcional.
+## O objetivo deste script é testar se correlação é suficiente pra criar o Minimal Feature Set
+## Não achei bons resultados, use univeriate ou stepwise.
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
 import matplotlib.pyplot as plt

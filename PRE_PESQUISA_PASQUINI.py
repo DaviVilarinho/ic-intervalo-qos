@@ -1,3 +1,5 @@
+# NOTE: este script foi importado do jupyter, por isso pode parecer mais imperativo que bem estruturado
+## Note ainda a natureza exploratória dele, precisava de velocidade para testar para apenas um dado se eu conseguia replicar
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
 import matplotlib.pyplot as plt
