@@ -201,10 +201,10 @@ for trace_family, traces in traces.items():
                 x_trace_per_dataset = pd.read_csv(f'{PASQUINIS_PATH}/{trace}/{x_file}', 
                                         header=0, index_col=0, low_memory=True, nrows=NROWS).apply(pd.to_numeric, errors='coerce').fillna(0)
                 if len(x_trace.columns) != 0:
-                    x_trace.merge(read_dataset, how="inner",
+                    x_trace.merge(x_trace_per_dataset, how="inner",
                         on="TimeStamp", copy=False)
                 else:
-                    x_trace = read_dataset
+                    x_trace = x_trace_per_dataset
 
             x_total_train, x_total_test, y_total_train, y_total_test = train_test_split(x_trace, y_dataset, test_size=0.7, random_state=42)
 
