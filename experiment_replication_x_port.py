@@ -7,7 +7,7 @@ import pandas as pd
 
 warnings.filterwarnings('ignore')
 
-if __name__ == '__main__':
+def main():
     results_path = global_variables_experiment.get_base_results_path('replication/port')
     table_v_columns = ['load_pattern', 'exp_type', 'regression_method', 'trace_family', 'y_metric', 'nmae', 'training_time']
     original_results = pd.DataFrame({
@@ -16,8 +16,8 @@ if __name__ == '__main__':
         'regression_method': ['reg_tree', 'random_forest'] * 8,
         'load_pattern': (['PeriodicLoad'] * 8) + (['FlashcrowdLoad'] * 8),
         'exp_type': ['SingleApp', 'BothApps'] * 8,
-        'nmae': [.14, .02, .11, .02, .12, .04, .11, .04, .11, .02, .09, .02, .1, .04, .06, .06],
-        'training_time': [1,1,40,32,1,1,38,30,1,1,37,16,1,1,24,11]
+        'nmae': [.11,.03,.11,.02,.15,.05,.14,.04,.11,.02,.1,.02,.11,.04,.1,.03],
+        'training_time': [16,17,4200,4600,14,13,3400,3900,85,15,3800,2400,15,10,3100,7600]
         }
     )
 
@@ -59,4 +59,5 @@ if __name__ == '__main__':
     results.to_csv(f'{results_path}/port_table_v_compared.csv')
 
 
-
+if __name__ == '__main__':
+    main()

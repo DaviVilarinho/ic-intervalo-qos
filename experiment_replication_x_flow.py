@@ -7,7 +7,7 @@ import pandas as pd
 
 warnings.filterwarnings('ignore')
 
-if __name__ == '__main__':
+def main():
     results_path = global_variables_experiment.get_base_results_path('replication/flow')
     table_vi_columns = ['load_pattern', 'exp_type', 'regression_method', 'trace_family', 'y_metric', 'nmae', 'training_time']
     original_results = pd.DataFrame({
@@ -58,5 +58,5 @@ if __name__ == '__main__':
     results['delta_to_original_nmae'] = results['nmae'] - results['nmae_original']
     results.to_csv(f'{results_path}/flow_table_vi_compared.csv')
 
-
-
+if __name__ == '__main__':
+    main()
