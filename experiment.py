@@ -38,7 +38,7 @@ def run_experiment(x: pd.DataFrame | pd.Series, y: pd.DataFrame | pd.Series, y_m
         results['random_forest'] = {
             'regressor': random_forest_regressor,
             'nmae': nmae(random_forest_regressor.predict(x_test), y_test[y_metric]),
-            'training_time': training_time_reg_tree
+            'training_time': training_time_random_forest
         }
 
     return results

@@ -64,7 +64,7 @@ def main():
                         
                         minimal_dataset = stepwise_selection(x, y, y_metric, DecisionTreeRegressor() if regression_method == 'reg_tree' else RandomForestRegressor(n_estimators=experiment.RANDOM_FOREST_TREES, random_state=random_state, n_jobs=-1))
 
-                        port_experiment = experiment.run_experiment(minimal_dataset, y, y_metric, random_state=random_state, regression_method=regression_method)
+                        stepwise_experiment = experiment.run_experiment(minimal_dataset, y, y_metric, random_state=random_state, regression_method=regression_method)
 
                         _, exp_type, load_pattern = trace.split('-')
                         results = pd.concat([
@@ -75,8 +75,8 @@ def main():
                                            'regression_method': regression_method,
                                            'load_pattern': load_pattern,
                                            'exp_type': exp_type,
-                                           'nmae': port_experiment[regression_method]['nmae'],
-                                           'training_time': port_experiment[regression_method]['training_time']}])], 
+                                           'nmae': stepwise_experiment[regression_method]['nmae'],
+                                           'training_time': stepwise_experiment[regression_method]['training_time']}])], 
                             ignore_index=True)
 
 
