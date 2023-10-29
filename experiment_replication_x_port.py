@@ -9,7 +9,7 @@ warnings.filterwarnings('ignore')
 
 if __name__ == '__main__':
     results_path = global_variables_experiment.get_base_results_path('replication/port')
-    table_vi_columns = ['load_pattern', 'exp_type', 'regression_method', 'trace_family', 'y_metric', 'nmae', 'training_time']
+    table_v_columns = ['load_pattern', 'exp_type', 'regression_method', 'trace_family', 'y_metric', 'nmae', 'training_time']
     original_results = pd.DataFrame({
         'trace_family': ['VoD', 'KV'] * 8,
         'y_metric': ['DispFrames', 'ReadsAvg'] * 8,
@@ -21,7 +21,7 @@ if __name__ == '__main__':
         }
     )
 
-    results_entry_columns = ['random_state'] + table_vi_columns
+    results_entry_columns = ['random_state'] + table_v_columns
     results = pd.DataFrame(columns=results_entry_columns)
     for trace_family, traces in global_variables_experiment.TRACES.items():
         for trace in traces:
@@ -51,12 +51,12 @@ if __name__ == '__main__':
     except FileExistsError:
         pass
 
-    results.to_csv(f'{results_path}/port_table_vi_entries.csv')
+    results.to_csv(f'{results_path}/port_table_v_entries.csv')
     keys = ['trace_family', 'y_metric', 'regression_method', 'load_pattern', 'exp_type']
     results = results.groupby(keys).mean()
     results = pd.merge(results, original_results, suffixes=['', '_original'], on=keys)
     results['delta_to_original_nmae'] = results['nmae'] - results['nmae_original']
-    results.to_csv(f'{results_path}/port_table_vi_compared.csv')
+    results.to_csv(f'{results_path}/port_table_v_compared.csv')
     #results = pd.merge(results, original_results, on=['trace_family', 'y_metric', 'regression_method'])
 
 
