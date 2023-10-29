@@ -26,7 +26,7 @@ if __name__ == '__main__':
     for trace_family, traces in global_variables_experiment.TRACES.items():
         for trace in traces:
             for y_metric in global_variables_experiment.Y_METRICS[trace_family]:
-                for random_state in range(1):
+                for random_state in range(2 if global_variables_experiment.IS_LOCAL else 18):
                     x,y = dataset_management.parse_traces(trace, y_metric, ['X_flow.csv'])
 
                     flow_experiment = experiment.run_experiment(x, y, y_metric, random_state=random_state)
@@ -57,7 +57,6 @@ if __name__ == '__main__':
     results = pd.merge(results, original_results, suffixes=['', '_original'], on=keys)
     results['delta_to_original_nmae'] = results['nmae'] - results['nmae_original']
     results.to_csv(f'{results_path}/flow_table_vi_compared.csv')
-    #results = pd.merge(results, original_results, on=['trace_family', 'y_metric', 'regression_method'])
 
 
 
