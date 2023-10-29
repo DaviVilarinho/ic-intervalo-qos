@@ -47,7 +47,7 @@ def stepwise_selection(x_trace, y_dataset, y_metric, regressor):
         for feature in features_available:
             x_trace_minimal[feature] = x_trace[[feature]].copy()
 
-            x_train_minimal , x_test_minimal, y_train_minimal, y_test_minimal = train_test_split(x_trace_minimal, y_dataset, test_size=0.7, random_state=42)
+            x_train_minimal , x_test_minimal, y_train_minimal, y_test_minimal = train_test_split(x_trace_minimal, y_dataset, test_size=0.3, random_state=42)
 
             regressor.fit(x_train_minimal, y_train_minimal)
             pred_reg_tree_minimal = regressor.predict(x_test_minimal)
@@ -129,7 +129,7 @@ for trace_family, traces in traces.items():
                 f.write(f'switch,regression_tree_{y_metric}_nmae,time_to_train_regression_tree_s,random_forest_{y_metric}_nmae,time_to_train_random_forest_s,\n')
 
             for switch in per_switch_traces.keys():
-                x_train_trace_per_switch , x_test_per_switch, y_train_per_switch, y_test_per_switch = train_test_split(per_switch_traces[switch], y_dataset, test_size=0.7, random_state=42)
+                x_train_trace_per_switch , x_test_per_switch, y_train_per_switch, y_test_per_switch = train_test_split(per_switch_traces[switch], y_dataset, test_size=0.3, random_state=42)
 
                 regression_tree_per_switch = DecisionTreeRegressor()
 
@@ -166,7 +166,7 @@ for trace_family, traces in traces.items():
                 x_trace_per_dataset = pd.read_csv(f'{PASQUINIS_PATH}/{trace}/{x_file}', 
                                         header=0, index_col=0, low_memory=True, nrows=NROWS).apply(pd.to_numeric, errors='coerce').fillna(0)
 
-                x_train_flow, x_test_per_dataset, y_train_per_dataset, y_test_per_dataset = train_test_split(x_trace_per_dataset, y_dataset, test_size=0.7, random_state=42)
+                x_train_flow, x_test_per_dataset, y_train_per_dataset, y_test_per_dataset = train_test_split(x_trace_per_dataset, y_dataset, test_size=0.3, random_state=42)
 
                 regression_tree_per_dataset = DecisionTreeRegressor() 
 
@@ -206,7 +206,7 @@ for trace_family, traces in traces.items():
                 else:
                     x_trace = x_trace_per_dataset
 
-            x_total_train, x_total_test, y_total_train, y_total_test = train_test_split(x_trace, y_dataset, test_size=0.7, random_state=42)
+            x_total_train, x_total_test, y_total_train, y_total_test = train_test_split(x_trace, y_dataset, test_size=0.3, random_state=42)
 
             regression_tree = DecisionTreeRegressor() 
 
@@ -235,7 +235,7 @@ for trace_family, traces in traces.items():
 
                 minimal_dataset = stepwise_selection(x_trace, y_dataset, y_metric, regressor)
 
-                x_minimal_train, x_minimal_test, y_minimal_train, y_minimal_test = train_test_split(minimal_dataset, y_dataset, test_size=0.7, random_state=42)
+                x_minimal_train, x_minimal_test, y_minimal_train, y_minimal_test = train_test_split(minimal_dataset, y_dataset, test_size=0.3, random_state=42)
 
                 regression_tree = DecisionTreeRegressor() 
 
