@@ -10,9 +10,11 @@ import pandas as pd
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import f_regression
 
+from parser import parse_strategy_and_sparsing_factor
+
 warnings.filterwarnings('ignore')
 
-def main(random_state=42):
+def main(strategy, sparsing_factor, random_state=42):
     results_path = global_variables_experiment.get_base_results_path('replication/univariate')
     table_iv_columns = ['load_pattern', 'exp_type', 'regression_method', 'trace_family', 'y_metric', 'nmae', 'training_time']
     original_results = pd.DataFrame({
@@ -69,4 +71,4 @@ def main(random_state=42):
     
 
 if __name__ == '__main__':
-    main()
+    main(*parse_strategy_and_sparsing_factor())

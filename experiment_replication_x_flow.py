@@ -5,9 +5,11 @@ import warnings
 from os import makedirs
 import pandas as pd
 
+from parser import parse_strategy_and_sparsing_factor
+
 warnings.filterwarnings('ignore')
 
-def main(random_state=42):
+def main(strategy, sparsing_factor, random_state=42):
     results_path = global_variables_experiment.get_base_results_path('replication/flow')
     table_vi_columns = ['load_pattern', 'exp_type', 'regression_method', 'trace_family', 'y_metric', 'nmae', 'training_time']
     original_results = pd.DataFrame({
@@ -58,4 +60,4 @@ def main(random_state=42):
     results.to_csv(f'{results_path}/flow_table_vi_compared.csv')
 
 if __name__ == '__main__':
-    main()
+    main(*parse_strategy_and_sparsing_factor())

@@ -5,6 +5,8 @@ import warnings
 from os import makedirs
 import pandas as pd
 
+from parser import parse_strategy_and_sparsing_factor
+
 warnings.filterwarnings('ignore')
 switch_ports = {
   "SWC1": [0,1,2,3,4],
@@ -25,7 +27,7 @@ switch_ports = {
 
 switch_from_port = {f'{port}': switch for switch, ports in switch_ports.items() for port in ports}
 
-def main(random_state=42):
+def main(strategy, sparsing_factor, random_state=42):
     results_path = global_variables_experiment.get_base_results_path('replication/switch')
     table_vii_viii_columns = ['load_pattern', 'exp_type', 'regression_method', 'trace_family', 'y_metric', 'switch', 'nmae']
 
@@ -70,4 +72,4 @@ def main(random_state=42):
     results.to_csv(f'{results_path}/switch_table_vii_viii_final.csv')
 
 if __name__ == '__main__':
-    main()
+    main(*parse_strategy_and_sparsing_factor())
