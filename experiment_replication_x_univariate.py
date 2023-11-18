@@ -32,7 +32,7 @@ def main(random_state=42):
         for trace in traces:
             for y_metric in global_variables_experiment.Y_METRICS[trace_family]:
                 x,y = dataset_management.parse_traces(trace, y_metric, ['X_port.csv', 'X_cluster.csv', 'X_flow.csv'])
-                for k in range(20):
+                for k in range(1,20):
                     for regression_method in ['reg_tree', 'random_forest']:
 
                         selectK = SelectKBest(f_regression, k=k)
@@ -63,9 +63,8 @@ def main(random_state=42):
 
     results.to_csv(f'{results_path}/univariate_table_iv_entries.csv')
     keys = ['trace_family', 'y_metric', 'regression_method', 'load_pattern', 'exp_type']
-    results = results.groupby(keys).mean()
     results = pd.merge(results, original_results, suffixes=['', '_stepwise'], on=keys)
-    results['delta_to_original_nmae'] = results['nmae'] - results['nmae_original']
+    results['delta_to_original_nmae'] = results['nmae'] - results['nmae_stepwise']
     results.to_csv(f'{results_path}/univariate_table_iv_compared.csv')
     
 
