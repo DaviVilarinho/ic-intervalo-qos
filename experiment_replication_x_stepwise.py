@@ -39,7 +39,7 @@ def stepwise_selection(x_trace, y_dataset, y_metric, regressor, random_state=42)
     return x_trace_minimal
 
 
-def main():
+def main(random_state=42):
     results_path = global_variables_experiment.get_base_results_path('replication/stepwise')
     table_iv_columns = ['load_pattern', 'exp_type', 'regression_method', 'trace_family', 'y_metric', 'nmae', 'training_time']
     original_results = pd.DataFrame({
@@ -59,25 +59,24 @@ def main():
         for trace in traces:
             for y_metric in global_variables_experiment.Y_METRICS[trace_family]:
                 x,y = dataset_management.parse_traces(trace, y_metric, ['X_port.csv', 'X_cluster.csv', 'X_flow.csv'])
-                for random_state in range(2):
-                    for regression_method in ['reg_tree', 'random_forest']:
-                        
-                        minimal_dataset = stepwise_selection(x, y, y_metric, DecisionTreeRegressor() if regression_method == 'reg_tree' else RandomForestRegressor(n_estimators=experiment.RANDOM_FOREST_TREES, random_state=random_state, n_jobs=-1))
+                for regression_method in ['reg_tree', 'random_forest']:
 
-                        stepwise_experiment = experiment.run_experiment(minimal_dataset, y, y_metric, random_state=random_state, regression_method=regression_method)
+                    minimal_dataset = stepwise_selection(x, y, y_metric, DecisionTreeRegressor() if regression_method == 'reg_tree' else RandomForestRegressor(n_estimators=experiment.RANDOM_FOREST_TREES, random_state=random_state, n_jobs=-1))
 
-                        _, exp_type, load_pattern = trace.split('-')
-                        results = pd.concat([
-                            results,
-                            pd.DataFrame([{'random_state': random_state,
-                                           'trace_family': trace_family,
-                                           'y_metric': y_metric,
-                                           'regression_method': regression_method,
-                                           'load_pattern': load_pattern,
-                                           'exp_type': exp_type,
-                                           'nmae': stepwise_experiment[regression_method]['nmae'],
-                                           'training_time': stepwise_experiment[regression_method]['training_time']}])], 
-                            ignore_index=True)
+                    stepwise_experiment = experiment.run_experiment(minimal_dataset, y, y_metric, random_state=random_state, regression_method=regression_method)
+
+                    _, exp_type, load_pattern = trace.split('-')
+                    results = pd.concat([
+                        results,
+                        pd.DataFrame([{'random_state': random_state,
+                                        'trace_family': trace_family,
+                                        'y_metric': y_metric,
+                                        'regression_method': regression_method,
+                                        'load_pattern': load_pattern,
+                                        'exp_type': exp_type,
+                                        'nmae': stepwise_experiment[regression_method]['nmae'],
+                                        'training_time': stepwise_experiment[regression_method]['training_time']}])], 
+                        ignore_index=True)
 
 
     try:

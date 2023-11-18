@@ -7,7 +7,7 @@ import pandas as pd
 
 warnings.filterwarnings('ignore')
 
-def main():
+def main(random_state=42):
     results_path = global_variables_experiment.get_base_results_path('replication/kv')
     table_iii_columns = ['load_pattern', 'exp_type', 'regression_method', 'trace_family', 'y_metric', 'nmae', 'training_time']
     original_results = pd.DataFrame({
@@ -26,24 +26,23 @@ def main():
     trace_family = 'KV'
     for trace in global_variables_experiment.TRACES[trace_family]:
         for y_metric in global_variables_experiment.Y_METRICS[trace_family]:
-            for random_state in range(2 if global_variables_experiment.IS_LOCAL else 6):
-                x,y = dataset_management.parse_traces(trace, y_metric, ['X_flow.csv', 'X_port.csv', 'X_cluster.csv'])
+            x,y = dataset_management.parse_traces(trace, y_metric, ['X_flow.csv', 'X_port.csv', 'X_cluster.csv'])
 
-                kv_experiment = experiment.run_experiment(x, y, y_metric, random_state=random_state)
+            kv_experiment = experiment.run_experiment(x, y, y_metric, random_state=random_state)
 
-                _, exp_type, load_pattern = trace.split('-')
-                for regression_method in ['reg_tree', 'random_forest']:
-                    results = pd.concat([
-                        results,
-                        pd.DataFrame([{'random_state': random_state,
-                                       'trace_family': trace_family,
-                                       'y_metric': y_metric,
-                                       'regression_method': regression_method,
-                                       'load_pattern': load_pattern,
-                                       'exp_type': exp_type,
-                                       'nmae': kv_experiment[regression_method]['nmae'],
-                                       'training_time': kv_experiment[regression_method]['training_time']}])], 
-                        ignore_index=True)
+            _, exp_type, load_pattern = trace.split('-')
+            for regression_method in ['reg_tree', 'random_forest']:
+                results = pd.concat([
+                    results,
+                    pd.DataFrame([{'random_state': random_state,
+                                    'trace_family': trace_family,
+                                    'y_metric': y_metric,
+                                    'regression_method': regression_method,
+                                    'load_pattern': load_pattern,
+                                    'exp_type': exp_type,
+                                    'nmae': kv_experiment[regression_method]['nmae'],
+                                    'training_time': kv_experiment[regression_method]['training_time']}])], 
+                    ignore_index=True)
 
     try:
         makedirs(results_path)
