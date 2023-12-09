@@ -7,7 +7,7 @@ import pandas as pd
 
 warnings.filterwarnings('ignore')
 
-def main(strategy, sparsing_factor, random_state=42):
+def main(strategy, sparsing_factor, destination, random_state=42):
     results_path = global_variables_experiment.get_base_results_path('replication/vod')
     table_ii_columns = ['load_pattern', 'exp_type', 'regression_method', 'trace_family', 'y_metric', 'nmae', 'training_time']
     original_results = pd.DataFrame({
@@ -27,6 +27,7 @@ def main(strategy, sparsing_factor, random_state=42):
     for trace in global_variables_experiment.TRACES[trace_family]:
         for y_metric in global_variables_experiment.Y_METRICS[trace_family]:
             x,y = dataset_management.parse_traces(trace, y_metric, ['X_flow.csv', 'X_port.csv', 'X_cluster.csv'])
+            x,y = strategy.sparse(x, y, sparsing_factor)
 
             vod_experiment = experiment.run_experiment(x, y, y_metric, random_state=random_state)
 
@@ -44,6 +45,7 @@ def main(strategy, sparsing_factor, random_state=42):
                                     'training_time': vod_experiment[regression_method]['training_time']}])], 
                     ignore_index=True)
 
+    results_path = destination or results_path
     try:
         makedirs(results_path)
     except FileExistsError:

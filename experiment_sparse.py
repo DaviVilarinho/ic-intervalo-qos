@@ -2,7 +2,6 @@ from subprocess import call
 
 if __name__ == '__main__':
     call_files = [
-        'experiment_on_correlation.py',
         'experiment_replication_x_switch.py'
         'experiment_replication_x_univariate.py'
         'experiment_replication_x_flow.py'
@@ -13,7 +12,7 @@ if __name__ == '__main__':
     ]
 
     for call_file in call_files:
-        for strategy in ['naive']:
-            for sparsing_factor in []:
-                call(['python3', call_file, '--strategy', strategy, '--sparsing-factor', sparsing_factor])
+        for strategy in ['Naive']:
+            for sparsing_factor in list(range(600,0, -15)) + [1]:
+                call(['python3', call_file, '--strategy', strategy, '--sparsing-factor', str(sparsing_factor), '--destination', 'sparsing'])
 

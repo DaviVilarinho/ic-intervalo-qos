@@ -1,10 +1,8 @@
 .env/
 .Rproj.user
 parsed/
-<<<<<<< HEAD
 models/
 vars.sh
 resultados_pre_pesquisa/2023-08-25T17:06:38/X_dataframe_*
-=======
-models/
->>>>>>> d28a79c3a5ac40929344a3058cec9e79186f6be6
+.ipynb_checkpoints/
+__pycache__/
