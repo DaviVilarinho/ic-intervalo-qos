@@ -1,9 +1,6 @@
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.ensemble import RandomForestRegressor
-import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 import numpy as np
-import time
+from sklearn.feature_selection import f_regression, SelectKBest
 import matplotlib.pyplot as plt
 import pandas as pd
 import os
@@ -77,8 +74,6 @@ def stepwise_selection(x_trace, y_dataset, y_metric, regressor):
             lowest_nmae_from_appending]].copy()
     return x_trace_minimal
 
-def _univariate(x_trace, y_dataset, y_metric, regressor):
-    
 
 results_path = f'{BASE_RESULTS_PATH}'
 for paths in [results_path]:
@@ -178,6 +173,26 @@ for trace_family, traces in traces.items():
                     f'{total_experiment["reg_tree"]["nmae"]},{total_experiment["reg_tree"]["training_time"]}, {total_experiment["random_forest"]["nmae"]},{total_experiment["random_forest"]["training_time"]},\n')
 
             # minimal
+            minimal_univariate_path = f'{BASE_RESULTS_PATH}/{trace}_{y_metric}_minimal_with_univariate.csv'
+            with open(minimal_univariate_path, 'w') as f:
+                f.write(
+                    f'k,regression_tree_{y_metric}_minimal_univariate_nmae,regression_tree_{y_metric}_minimal_univariate_training_time,random_forest_{y_metric}_minimal_univariate_nmae,random_forest_{y_metric}_minimal_univariate_training_time,\n')
+
+            best_k = []
+            for k in range(1, 17):
+                selectK = SelectKBest(f_regression, k=k)
+
+                selectK.set_output(transform="pandas")
+                minimal_dataset = selectK.fit_transform(x_trace, y_dataset)
+                best_k.append(list(minimal_dataset.columns))
+
+                minimal_experiment = run_experiment(
+                    minimal_dataset, y_dataset, y_metric)
+
+                with open(minimal_univariate_path, 'a') as f:
+                    f.write(
+                        f'{k},{minimal_experiment["reg_tree"]["nmae"]},{minimal_experiment["reg_tree"]["training_time"]}, {minimal_experiment["random_forest"]["nmae"]},{minimal_experiment["random_forest"]["training_time"]},\n')
+            """
             for regressor in [DecisionTreeRegressor(), RandomForestRegressor(n_estimators=120, random_state=42, n_jobs=-1)]:
                 minimal_stepwise_path = f'{BASE_RESULTS_PATH}/{trace}_{y_metric}_minimal_with_{type(regressor).__name__}.csv'
                 with open(minimal_stepwise_path, 'w') as f:
@@ -193,3 +208,4 @@ for trace_family, traces in traces.items():
                 with open(minimal_stepwise_path, 'a') as f:
                     f.write(
                         f'{minimal_experiment["reg_tree"]["nmae"]},{minimal_experiment["reg_tree"]["training_time"]}, {minimal_experiment["random_forest"]["nmae"]},{minimal_experiment["random_forest"]["training_time"]},\n')
+"""
