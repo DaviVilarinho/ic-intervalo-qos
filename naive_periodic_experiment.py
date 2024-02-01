@@ -87,13 +87,32 @@ with open(per_switch_file, 'w') as f:
     f.write(
         f'carga,apps,feature,método,switch,nmae,\n')
 
+
 def get_per_file_name(per_file_csv):
     return f'{BASE_RESULTS_PATH}/per_{x_file.split(".")[0]}.csv'
+
 PER_FILES = ['X_flow.csv', 'X_port.csv']
+
 for x_file in PER_FILES:
     per_dataset_file = get_per_file_name(x_file)
     with open(per_dataset_file, 'w') as f:
         f.write(f'carga,apps,feature,método,nmae,\n')
+
+
+TOTAL_X_FILE_PATH = f'{BASE_RESULTS_PATH}/total_X.csv'
+with open(TOTAL_X_FILE_PATH, 'w') as f:
+    f.write(f'carga,apps,feature,método,nmae,\n')
+
+
+
+MINIMAL_PATH = f'{BASE_RESULTS_PATH}/minimal_with_univariate.csv'
+with open(MINIMAL_PATH, 'w') as f:
+    f.write(f'carga,apps,feature,método,nmae,\n')
+
+BEST_K_PATH = f'{BASE_RESULTS_PATH}/best_k.csv'
+with open(BEST_K_PATH, 'w') as f:
+    f.write(f'Features,\n')
+
 
 for trace_family, traces in traces.items():
     for trace in traces:
@@ -161,37 +180,50 @@ for trace_family, traces in traces.items():
 
             # total
 
-            total_X_file_path = f'{BASE_RESULTS_PATH}/{trace}_{y_metric}_X.csv'
-            with open(total_X_file_path, 'w') as f:
-                f.write(
-                    f'regression_tree_{y_metric}_X_nmae,time_to_train_regression_tree_s,random_forest_{y_metric}_X_nmae,time_to_train_random_forest_s,\n')
-
             x_trace, y_dataset = parse_traces(
                 trace, y_metric, ['X_cluster.csv', 'X_flow.csv', 'X_port.csv'])
 
-            total_experiment = run_experiment(x_trace, y_dataset, y_metric)
 
-            with open(total_X_file_path, 'a') as f:
+            x_train, x_test, y_train, y_test = train_test_split(
+                x_trace, y_dataset, test_size=TEST_SIZE, random_state=RANDOM_STATE)
+
+            regression_tree_regressor = DecisionTreeRegressor()
+            regression_tree_regressor.fit(x_train, y_train)
+
+            random_forest_regressor = RandomForestRegressor(
+                n_estimators=RANDOM_FOREST_TREES, random_state=RANDOM_STATE, n_jobs=-1)
+            random_forest_regressor.fit(x_train, y_train)
+
+            with open(TOTAL_X_FILE_PATH, 'a') as f:
                 f.write(
-                    f'{total_experiment["reg_tree"]["nmae"]},{total_experiment["reg_tree"]["training_time"]}, {total_experiment["random_forest"]["nmae"]},{total_experiment["random_forest"]["training_time"]},\n')
+                    f'{trace_load},{trace_apps},{y_metric},RT,{nmae(regression_tree_regressor.predict(x_test), y_test[y_metric])},\n')
+                f.write(
+                    f'{trace_load},{trace_apps},{y_metric},RF,{nmae(random_forest_regressor.predict(x_test), y_test[y_metric])},\n')
+
 
             # minimal
-            minimal_univariate_path = f'{BASE_RESULTS_PATH}/{trace}_{y_metric}_minimal_with_univariate.csv'
-            with open(minimal_univariate_path, 'w') as f:
-                f.write(
-                    f'k,regression_tree_{y_metric}_minimal_univariate_nmae,regression_tree_{y_metric}_minimal_univariate_training_time,random_forest_{y_metric}_minimal_univariate_nmae,random_forest_{y_metric}_minimal_univariate_training_time,\n')
-
+            k = 12
             best_k = []
-            for k in range(1, 17):
-                selectK = SelectKBest(f_regression, k=k)
+            selectK = SelectKBest(f_regression, k=k)
 
-                selectK.set_output(transform="pandas")
-                minimal_dataset = selectK.fit_transform(x_trace, y_dataset)
-                best_k.append(list(minimal_dataset.columns))
+            selectK.set_output(transform="pandas")
+            minimal_dataset = selectK.fit_transform(x_trace, y_dataset)
+            best_k.append(list(minimal_dataset.columns))
 
-                minimal_experiment = run_experiment(
-                    minimal_dataset, y_dataset, y_metric)
+            x_train, x_test, y_train, y_test = train_test_split(
+                minimal_dataset, y_dataset, test_size=TEST_SIZE, random_state=RANDOM_STATE)
 
-                with open(minimal_univariate_path, 'a') as f:
-                    f.write(
-                        f'{k},{minimal_experiment["reg_tree"]["nmae"]},{minimal_experiment["reg_tree"]["training_time"]}, {minimal_experiment["random_forest"]["nmae"]},{minimal_experiment["random_forest"]["training_time"]},\n')
+            regression_tree_regressor = DecisionTreeRegressor()
+            regression_tree_regressor.fit(x_train, y_train)
+
+            random_forest_regressor = RandomForestRegressor(
+                n_estimators=RANDOM_FOREST_TREES, random_state=RANDOM_STATE, n_jobs=-1)
+            random_forest_regressor.fit(x_train, y_train)
+
+
+            with open(MINIMAL_PATH, 'a') as f:
+                f.write(
+                    f'{trace_load},{trace_apps},{y_metric},RF,{nmae(random_forest_regressor.predict(x_test), y_test[y_metric])},\n')
+
+            with open(BEST_K_PATH, 'a') as f:
+                f.write(f'{best_k},\n')
