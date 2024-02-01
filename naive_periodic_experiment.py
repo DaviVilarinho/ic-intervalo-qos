@@ -87,7 +87,13 @@ with open(per_switch_file, 'w') as f:
     f.write(
         f'carga,apps,feature,método,switch,nmae,\n')
 
+def get_per_file_name(per_file_csv):
+    return f'{BASE_RESULTS_PATH}/per_{x_file.split(".")[0]}.csv'
 PER_FILES = ['X_flow.csv', 'X_port.csv']
+for x_file in PER_FILES:
+    per_dataset_file = get_per_file_name(x_file)
+    with open(per_dataset_file, 'w') as f:
+        f.write(f'carga,apps,feature,método,nmae,\n')
 
 for trace_family, traces in traces.items():
     for trace in traces:
@@ -125,25 +131,31 @@ for trace_family, traces in traces.items():
                     f.write(
                         f'{trace_load},{trace_apps},{y_metric},RT,{switch},{nmae(regression_tree_regressor.predict(x_test), y_test[y_metric])},\n')
                     f.write(
-                        f'{trace_load},{trace_apps},{y_metric},Rf,{switch},{nmae(random_forest_regressor.predict(x_test), y_test[y_metric])},\n')
+                        f'{trace_load},{trace_apps},{y_metric},RF,{switch},{nmae(random_forest_regressor.predict(x_test), y_test[y_metric])},\n')
 
             # per flow e per port
 
             for x_file in PER_FILES:
-                per_dataset_file = f'{BASE_RESULTS_PATH}/{trace}_{y_metric}_per_{x_file.split(".")[0]}.csv'
-                with open(per_dataset_file, 'w') as f:
-                    f.write(
-                        f'regression_tree_{y_metric}_{x_file}_nmae,time_to_train_regression_tree_s,random_forest_{y_metric}_{x_file}_nmae,time_to_train_random_forest_s,\n')
+                per_dataset_file = get_per_file_name(x_file)
 
                 x_trace_per_dataset, y_dataset = parse_traces(
                     trace, y_metric, [x_file])
 
-                per_file_experiment = run_experiment(
-                    x_trace_per_dataset, y_dataset, y_metric)
+                x_train, x_test, y_train, y_test = train_test_split(
+                    x_trace_per_dataset, y_dataset, test_size=TEST_SIZE, random_state=RANDOM_STATE)
+
+                regression_tree_regressor = DecisionTreeRegressor()
+                regression_tree_regressor.fit(x_train, y_train)
+
+                random_forest_regressor = RandomForestRegressor(
+                    n_estimators=RANDOM_FOREST_TREES, random_state=RANDOM_STATE, n_jobs=-1)
+                random_forest_regressor.fit(x_train, y_train)
 
                 with open(per_dataset_file, 'a') as f:
                     f.write(
-                        f'{per_file_experiment["reg_tree"]["nmae"]}, {per_file_experiment["reg_tree"]["training_time"]},{per_file_experiment["random_forest"]["nmae"]}, {per_file_experiment["random_forest"]["training_time"]}\n')
+                        f'{trace_load},{trace_apps},{y_metric},RT,{nmae(regression_tree_regressor.predict(x_test), y_test[y_metric])},\n')
+                    f.write(
+                        f'{trace_load},{trace_apps},{y_metric},RF,{nmae(random_forest_regressor.predict(x_test), y_test[y_metric])},\n')
 
             # larger after
 
