@@ -10,7 +10,6 @@ import warnings
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
-import time
 
 
 from dataset_management import parse_traces
@@ -163,6 +162,7 @@ for trace_family, traces in traces.items():
                             f'{period},{trace_load},{trace_apps},{y_metric},RT,{switch},{nmae(regression_tree_regressor.predict(x_test), y_test[y_metric])},\n')
                         f.write(
                             f'{period},{trace_load},{trace_apps},{y_metric},RF,{switch},{nmae(random_forest_regressor.predict(x_test), y_test[y_metric])},\n')
+                    print(f'{period},{trace_load},{trace_apps},{y_metric},RF,{switch}')
 
             # per flow e per port
 
@@ -190,6 +190,7 @@ for trace_family, traces in traces.items():
                             f'{period},{trace_load},{trace_apps},{y_metric},RT,{nmae(regression_tree_regressor.predict(x_test), y_test[y_metric])},\n')
                         f.write(
                             f'{period},{trace_load},{trace_apps},{y_metric},RF,{nmae(random_forest_regressor.predict(x_test), y_test[y_metric])},\n')
+                    print(f'per file {per_dataset_file} {period},{trace_load},{trace_apps},{y_metric},RF')
 
             # larger after
 
@@ -216,6 +217,7 @@ for trace_family, traces in traces.items():
                         f'{period},{trace_load},{trace_apps},{y_metric},RT,{nmae(regression_tree_regressor.predict(x_test), y_test[y_metric])},\n')
                     f.write(
                         f'{period},{trace_load},{trace_apps},{y_metric},RF,{nmae(random_forest_regressor.predict(x_test), y_test[y_metric])},\n')
+                print(f'total X {period},{trace_load},{trace_apps},{y_metric},RF')
 
 
                 # minimal
@@ -245,6 +247,8 @@ for trace_family, traces in traces.items():
                         f'{period},{trace_load},{trace_apps},{y_metric},RT,{nmae(regression_tree_regressor.predict(x_test), y_test[y_metric])},\n')
                     f.write(
                         f'{period},{trace_load},{trace_apps},{y_metric},RF,{nmae(random_forest_regressor.predict(x_test), y_test[y_metric])},\n')
+
+                print(f'univariate {period},{trace_load},{trace_apps},{y_metric},RF')
 
                 with open(BEST_K_PATH, 'a') as f:
                     f.write(f'{period},{best_k},\n')
