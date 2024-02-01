@@ -37,7 +37,7 @@ traces = {
         "KV-SingleApp-PeriodicLoad"]
 }
 
-NROWS = 100 if IS_LOCAL else None
+NROWS = None if IS_LOCAL else None
 
 
 TEST_SIZE = 0.3
@@ -85,7 +85,7 @@ per_switch_file = f'{BASE_RESULTS_PATH}/per_switch.csv'
 
 with open(per_switch_file, 'w') as f:
     f.write(
-        f'carga,apps,feature,método,switch,nmae,\n')
+        f'período,carga,apps,feature,método,switch,nmae,\n')
 
 
 def get_per_file_name(per_file_csv):
@@ -96,22 +96,31 @@ PER_FILES = ['X_flow.csv', 'X_port.csv']
 for x_file in PER_FILES:
     per_dataset_file = get_per_file_name(x_file)
     with open(per_dataset_file, 'w') as f:
-        f.write(f'carga,apps,feature,método,nmae,\n')
+        f.write(f'período,carga,apps,feature,método,nmae,\n')
 
 
 TOTAL_X_FILE_PATH = f'{BASE_RESULTS_PATH}/total_X.csv'
 with open(TOTAL_X_FILE_PATH, 'w') as f:
-    f.write(f'carga,apps,feature,método,nmae,\n')
+    f.write(f'período,carga,apps,feature,método,nmae,\n')
 
 
 
 MINIMAL_PATH = f'{BASE_RESULTS_PATH}/minimal_with_univariate.csv'
 with open(MINIMAL_PATH, 'w') as f:
-    f.write(f'carga,apps,feature,método,nmae,\n')
+    f.write(f'período,carga,apps,feature,método,nmae,\n')
 
 BEST_K_PATH = f'{BASE_RESULTS_PATH}/best_k.csv'
 with open(BEST_K_PATH, 'w') as f:
-    f.write(f'Features,\n')
+    f.write(f'período,Features,\n')
+
+
+def filter_periodic(x, y, period: int):
+    x = x[x.index % period == 0]
+    y = y[y.index % period == 0]
+
+    return x, y
+
+PERIODS = [2,4,8,16,32,64,128,256]
 
 
 for trace_family, traces in traces.items():
@@ -136,21 +145,24 @@ for trace_family, traces in traces.items():
 
 
             for switch in per_switch_traces.keys():
-                x_train, x_test, y_train, y_test = train_test_split(
-                    per_switch_traces[switch], y_dataset, test_size=TEST_SIZE, random_state=RANDOM_STATE)
+                for period in PERIODS:
+                    x_train, x_test, y_train, y_test = train_test_split(
+                        per_switch_traces[switch], y_dataset, test_size=TEST_SIZE, random_state=RANDOM_STATE)
 
-                regression_tree_regressor = DecisionTreeRegressor()
-                regression_tree_regressor.fit(x_train, y_train)
+                    x_train, y_train = filter_periodic(x_train, y_train, period)
 
-                random_forest_regressor = RandomForestRegressor(
-                    n_estimators=RANDOM_FOREST_TREES, random_state=RANDOM_STATE, n_jobs=-1)
-                random_forest_regressor.fit(x_train, y_train)
+                    regression_tree_regressor = DecisionTreeRegressor()
+                    regression_tree_regressor.fit(x_train, y_train)
 
-                with open(per_switch_file, 'a') as f:
-                    f.write(
-                        f'{trace_load},{trace_apps},{y_metric},RT,{switch},{nmae(regression_tree_regressor.predict(x_test), y_test[y_metric])},\n')
-                    f.write(
-                        f'{trace_load},{trace_apps},{y_metric},RF,{switch},{nmae(random_forest_regressor.predict(x_test), y_test[y_metric])},\n')
+                    random_forest_regressor = RandomForestRegressor(
+                        n_estimators=RANDOM_FOREST_TREES, random_state=RANDOM_STATE, n_jobs=-1)
+                    random_forest_regressor.fit(x_train, y_train)
+
+                    with open(per_switch_file, 'a') as f:
+                        f.write(
+                            f'{period},{trace_load},{trace_apps},{y_metric},RT,{switch},{nmae(regression_tree_regressor.predict(x_test), y_test[y_metric])},\n')
+                        f.write(
+                            f'{period},{trace_load},{trace_apps},{y_metric},RF,{switch},{nmae(random_forest_regressor.predict(x_test), y_test[y_metric])},\n')
 
             # per flow e per port
 
@@ -160,21 +172,24 @@ for trace_family, traces in traces.items():
                 x_trace_per_dataset, y_dataset = parse_traces(
                     trace, y_metric, [x_file])
 
-                x_train, x_test, y_train, y_test = train_test_split(
-                    x_trace_per_dataset, y_dataset, test_size=TEST_SIZE, random_state=RANDOM_STATE)
+                for period in PERIODS:
+                    x_train, x_test, y_train, y_test = train_test_split(
+                        x_trace_per_dataset, y_dataset, test_size=TEST_SIZE, random_state=RANDOM_STATE)
 
-                regression_tree_regressor = DecisionTreeRegressor()
-                regression_tree_regressor.fit(x_train, y_train)
+                    x_train, y_train = filter_periodic(x_train, y_train, period)
 
-                random_forest_regressor = RandomForestRegressor(
-                    n_estimators=RANDOM_FOREST_TREES, random_state=RANDOM_STATE, n_jobs=-1)
-                random_forest_regressor.fit(x_train, y_train)
+                    regression_tree_regressor = DecisionTreeRegressor()
+                    regression_tree_regressor.fit(x_train, y_train)
 
-                with open(per_dataset_file, 'a') as f:
-                    f.write(
-                        f'{trace_load},{trace_apps},{y_metric},RT,{nmae(regression_tree_regressor.predict(x_test), y_test[y_metric])},\n')
-                    f.write(
-                        f'{trace_load},{trace_apps},{y_metric},RF,{nmae(random_forest_regressor.predict(x_test), y_test[y_metric])},\n')
+                    random_forest_regressor = RandomForestRegressor(
+                        n_estimators=RANDOM_FOREST_TREES, random_state=RANDOM_STATE, n_jobs=-1)
+                    random_forest_regressor.fit(x_train, y_train)
+
+                    with open(per_dataset_file, 'a') as f:
+                        f.write(
+                            f'{period},{trace_load},{trace_apps},{y_metric},RT,{nmae(regression_tree_regressor.predict(x_test), y_test[y_metric])},\n')
+                        f.write(
+                            f'{period},{trace_load},{trace_apps},{y_metric},RF,{nmae(random_forest_regressor.predict(x_test), y_test[y_metric])},\n')
 
             # larger after
 
@@ -183,47 +198,53 @@ for trace_family, traces in traces.items():
             x_trace, y_dataset = parse_traces(
                 trace, y_metric, ['X_cluster.csv', 'X_flow.csv', 'X_port.csv'])
 
+            for period in PERIODS:
+                x_train, x_test, y_train, y_test = train_test_split(
+                    x_trace, y_dataset, test_size=TEST_SIZE, random_state=RANDOM_STATE)
 
-            x_train, x_test, y_train, y_test = train_test_split(
-                x_trace, y_dataset, test_size=TEST_SIZE, random_state=RANDOM_STATE)
+                x_train, y_train = filter_periodic(x_train, y_train, period)
 
-            regression_tree_regressor = DecisionTreeRegressor()
-            regression_tree_regressor.fit(x_train, y_train)
+                regression_tree_regressor = DecisionTreeRegressor()
+                regression_tree_regressor.fit(x_train, y_train)
 
-            random_forest_regressor = RandomForestRegressor(
-                n_estimators=RANDOM_FOREST_TREES, random_state=RANDOM_STATE, n_jobs=-1)
-            random_forest_regressor.fit(x_train, y_train)
+                random_forest_regressor = RandomForestRegressor(
+                    n_estimators=RANDOM_FOREST_TREES, random_state=RANDOM_STATE, n_jobs=-1)
+                random_forest_regressor.fit(x_train, y_train)
 
-            with open(TOTAL_X_FILE_PATH, 'a') as f:
-                f.write(
-                    f'{trace_load},{trace_apps},{y_metric},RT,{nmae(regression_tree_regressor.predict(x_test), y_test[y_metric])},\n')
-                f.write(
-                    f'{trace_load},{trace_apps},{y_metric},RF,{nmae(random_forest_regressor.predict(x_test), y_test[y_metric])},\n')
-
-
-            # minimal
-            k = 12
-            best_k = []
-            selectK = SelectKBest(f_regression, k=k)
-
-            selectK.set_output(transform="pandas")
-            minimal_dataset = selectK.fit_transform(x_trace, y_dataset)
-            best_k.append(list(minimal_dataset.columns))
-
-            x_train, x_test, y_train, y_test = train_test_split(
-                minimal_dataset, y_dataset, test_size=TEST_SIZE, random_state=RANDOM_STATE)
-
-            regression_tree_regressor = DecisionTreeRegressor()
-            regression_tree_regressor.fit(x_train, y_train)
-
-            random_forest_regressor = RandomForestRegressor(
-                n_estimators=RANDOM_FOREST_TREES, random_state=RANDOM_STATE, n_jobs=-1)
-            random_forest_regressor.fit(x_train, y_train)
+                with open(TOTAL_X_FILE_PATH, 'a') as f:
+                    f.write(
+                        f'{period},{trace_load},{trace_apps},{y_metric},RT,{nmae(regression_tree_regressor.predict(x_test), y_test[y_metric])},\n')
+                    f.write(
+                        f'{period},{trace_load},{trace_apps},{y_metric},RF,{nmae(random_forest_regressor.predict(x_test), y_test[y_metric])},\n')
 
 
-            with open(MINIMAL_PATH, 'a') as f:
-                f.write(
-                    f'{trace_load},{trace_apps},{y_metric},RF,{nmae(random_forest_regressor.predict(x_test), y_test[y_metric])},\n')
+                # minimal
+                k = 12
+                best_k = []
+                selectK = SelectKBest(f_regression, k=k)
 
-            with open(BEST_K_PATH, 'a') as f:
-                f.write(f'{best_k},\n')
+                selectK.set_output(transform="pandas")
+
+                x_trace_periodic_for_selectk, y_trace_periodic_for_selectk = filter_periodic(x_trace, y_dataset, period)
+                minimal_dataset = selectK.fit_transform(x_trace_periodic_for_selectk, y_trace_periodic_for_selectk)
+                best_k.append(list(minimal_dataset.columns))
+
+                x_train, x_test, y_train, y_test = train_test_split(
+                    minimal_dataset, y_trace_periodic_for_selectk, test_size=TEST_SIZE, random_state=RANDOM_STATE)
+
+                regression_tree_regressor = DecisionTreeRegressor()
+                regression_tree_regressor.fit(x_train, y_train)
+
+                random_forest_regressor = RandomForestRegressor(
+                    n_estimators=RANDOM_FOREST_TREES, random_state=RANDOM_STATE, n_jobs=-1)
+                random_forest_regressor.fit(x_train, y_train)
+
+
+                with open(MINIMAL_PATH, 'a') as f:
+                    f.write(
+                        f'{period},{trace_load},{trace_apps},{y_metric},RT,{nmae(regression_tree_regressor.predict(x_test), y_test[y_metric])},\n')
+                    f.write(
+                        f'{period},{trace_load},{trace_apps},{y_metric},RF,{nmae(random_forest_regressor.predict(x_test), y_test[y_metric])},\n')
+
+                with open(BEST_K_PATH, 'a') as f:
+                    f.write(f'{period},{best_k},\n')
