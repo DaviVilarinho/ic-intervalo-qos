@@ -106,7 +106,7 @@ with open(TOTAL_X_FILE_PATH, 'w') as f:
 
 MINIMAL_PATH = f'{BASE_RESULTS_PATH}/minimal_with_univariate.csv'
 with open(MINIMAL_PATH, 'w') as f:
-    f.write(f'período,carga,apps,feature,método,nmae,\n')
+    f.write(f'período,carga,apps,feature,método,nmae\n')
 
 BEST_K_PATH = f'{BASE_RESULTS_PATH}/best_k.csv'
 with open(BEST_K_PATH, 'w') as f:
@@ -145,10 +145,11 @@ for trace_family, traces in traces.items():
 
             for switch in per_switch_traces.keys():
                 for period in PERIODS:
-                    x_train, x_test, y_train, y_test = train_test_split(
-                        per_switch_traces[switch], y_dataset, test_size=TEST_SIZE, random_state=RANDOM_STATE)
 
-                    x_train, y_train = filter_periodic(x_train, y_train, period)
+                    x_filtered, y_filtered = filter_periodic(per_switch_traces[switch], y_dataset, period)
+
+                    x_train, x_test, y_train, y_test = train_test_split(
+                        x_filtered, y_filtered, test_size=TEST_SIZE, random_state=RANDOM_STATE)
 
                     regression_tree_regressor = DecisionTreeRegressor()
                     regression_tree_regressor.fit(x_train, y_train)
@@ -173,10 +174,10 @@ for trace_family, traces in traces.items():
                     trace, y_metric, [x_file])
 
                 for period in PERIODS:
+                    x_filtered, y_filtered = filter_periodic(x_trace_per_dataset, y_dataset, period)
+                    
                     x_train, x_test, y_train, y_test = train_test_split(
-                        x_trace_per_dataset, y_dataset, test_size=TEST_SIZE, random_state=RANDOM_STATE)
-
-                    x_train, y_train = filter_periodic(x_train, y_train, period)
+                        x_filtered, y_filtered, test_size=TEST_SIZE, random_state=RANDOM_STATE)
 
                     regression_tree_regressor = DecisionTreeRegressor()
                     regression_tree_regressor.fit(x_train, y_train)
@@ -200,10 +201,10 @@ for trace_family, traces in traces.items():
                 trace, y_metric, ['X_cluster.csv', 'X_flow.csv', 'X_port.csv'])
 
             for period in PERIODS:
-                x_train, x_test, y_train, y_test = train_test_split(
-                    x_trace, y_dataset, test_size=TEST_SIZE, random_state=RANDOM_STATE)
+                x_filtered, y_filtered = filter_periodic(x_trace, y_dataset, period)
 
-                x_train, y_train = filter_periodic(x_train, y_train, period)
+                x_train, x_test, y_train, y_test = train_test_split(
+                    x_filtered, y_filtered, test_size=TEST_SIZE, random_state=RANDOM_STATE)
 
                 regression_tree_regressor = DecisionTreeRegressor()
                 regression_tree_regressor.fit(x_train, y_train)
@@ -227,12 +228,11 @@ for trace_family, traces in traces.items():
 
                 selectK.set_output(transform="pandas")
 
-                x_trace_periodic_for_selectk, y_trace_periodic_for_selectk = filter_periodic(x_trace, y_dataset, period)
-                minimal_dataset = selectK.fit_transform(x_trace_periodic_for_selectk, y_trace_periodic_for_selectk)
+                minimal_dataset = selectK.fit_transform(x_filtered, y_filtered)
                 best_k.append(list(minimal_dataset.columns))
 
                 x_train, x_test, y_train, y_test = train_test_split(
-                    minimal_dataset, y_trace_periodic_for_selectk, test_size=TEST_SIZE, random_state=RANDOM_STATE)
+                    minimal_dataset, y_filtered, test_size=TEST_SIZE, random_state=RANDOM_STATE)
 
                 regression_tree_regressor = DecisionTreeRegressor()
                 regression_tree_regressor.fit(x_train, y_train)
