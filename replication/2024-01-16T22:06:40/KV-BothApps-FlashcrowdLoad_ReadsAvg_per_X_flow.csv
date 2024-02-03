@@ -1,0 +1,2 @@
+regression_tree_ReadsAvg_X_flow.csv_nmae,time_to_train_regression_tree_s,random_forest_ReadsAvg_X_flow.csv_nmae,time_to_train_random_forest_s,
+0.32225255799055036, 0.0011553764343261719,0.15686146452367739, 0.0011553764343261719

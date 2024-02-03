@@ -1,0 +1,2 @@
+regression_tree_ReadsAvg_X_port.csv_nmae,time_to_train_regression_tree_s,random_forest_ReadsAvg_X_port.csv_nmae,time_to_train_random_forest_s,
+0.21513389702832333, 0.0012938976287841797,0.1401094233487125, 0.0012938976287841797
