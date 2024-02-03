@@ -1,2 +1,0 @@
-case, nmae_random_forest, nmae_regression_tree
-sem-pre-processamento, 0.039305555555555545, 0.031192660550458714

@@ -1,2 +1,0 @@
-quantidade_linhas, predict_random_forest, regression_tree
-1000.0, 0.16533414639654903, 0.1602461212999357

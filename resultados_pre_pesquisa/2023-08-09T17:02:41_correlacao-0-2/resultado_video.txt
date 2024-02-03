@@ -1,2 +1,0 @@
-nmae_random_forest, nmae_regression_tree
-0.032133027522935786, 0.032568807339449536

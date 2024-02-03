@@ -1,2 +1,0 @@
-parameter, predict_random_forest, regression_tree
-todas_linhas, 0.09373613500379385, 0.09839315854125681
