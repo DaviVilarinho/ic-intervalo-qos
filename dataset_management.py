@@ -2,8 +2,8 @@ import pandas as pd
 import global_variables_experiment
 
 
-def parse_traces(trace: str, y_metric: str, x_files: list):
-    y = pd.read_csv(f'{global_variables_experiment.PASQUINIS_PATH}/{trace}/Y.csv', header=0, nrows=global_variables_experiment.NROWS,
+def parse_traces(trace: str, y_metric: str, x_files: list, nrows=global_variables_experiment.NROWS):
+    y = pd.read_csv(f'{global_variables_experiment.PASQUINIS_PATH}/{trace}/Y.csv', header=0, nrows=nrows,
                     index_col=0, usecols=['TimeStamp', y_metric], low_memory=True).apply(pd.to_numeric, errors='coerce').fillna(0)
 
     x = pd.DataFrame()
