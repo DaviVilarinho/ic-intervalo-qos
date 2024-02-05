@@ -16,7 +16,7 @@ EXPERIMENT = "histograms-and-cdfs"
 
 PASQUINIS_PATH = "../traces-netsoft-2017"
 DATE = datetime.now().isoformat(timespec='seconds')
-BASE_RESULTS_PATH = f'/tmp/{EXPERIMENT}/{DATE}'
+BASE_RESULTS_PATH = f'{EXPERIMENT}/{DATE}'
 
 traces = {
     "VOD": [
