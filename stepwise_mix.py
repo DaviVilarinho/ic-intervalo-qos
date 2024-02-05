@@ -23,7 +23,7 @@ PASQUINIS_PATH = "../traces-netsoft-2017"
 DATE = datetime.now().isoformat(timespec='seconds')
 BASE_RESULTS_PATH = f'{"." if not IS_LOCAL else "/tmp"}/{EXPERIMENT}/{DATE}'
 
-traces = {
+traces_names = {
     "VOD": [
         "VoD-BothApps-FlashcrowdLoad",
         "VoD-BothApps-PeriodicLoad",
@@ -41,6 +41,7 @@ NROWS = None if IS_LOCAL else None
 
 TEST_SIZE = 0.3
 RANDOM_FOREST_TREES = 120
+
 
 def nmae(y_pred, y_test):
     return abs(y_pred - y_test).mean() / y_test.mean()
@@ -61,7 +62,8 @@ y_metrics = {
 MINIMAL_PATH = f'{BASE_RESULTS_PATH}/minimal_with_univariate_and_stepwise.csv'
 with open(MINIMAL_PATH, 'w') as f:
     f.write(f'carga,apps,feature,método, mét. stepwise,nmae\n')
-BEST_K_PATH = f'{BASE_RESULTS_PATH}/features_minimized.csv' 
+BEST_K_PATH = f'{BASE_RESULTS_PATH}/features_minimized.csv'
+
 
 def stepwise_selection(x_trace, y_dataset, y_metric, regressor):
     old_reg_tree_nmae = 1
@@ -99,7 +101,8 @@ def stepwise_selection(x_trace, y_dataset, y_metric, regressor):
             lowest_nmae_from_appending]].copy()
     return x_trace_minimal
 
-for trace_family, traces in traces.items():
+
+for trace_family, traces in traces_names.items():
     for trace in traces:
         trace_name_decomposition = trace.split('-')
         trace_apps = trace_name_decomposition[1]
@@ -111,7 +114,6 @@ for trace_family, traces in traces.items():
 
             x_train, x_test, y_train, y_test = train_test_split(
                 x_trace, y_dataset, test_size=TEST_SIZE, random_state=RANDOM_STATE)
-
 
             # minimal
             k = 100
@@ -137,7 +139,6 @@ for trace_family, traces in traces.items():
                 random_forest_regressor = RandomForestRegressor(
                     n_estimators=RANDOM_FOREST_TREES, random_state=RANDOM_STATE, n_jobs=-1)
                 random_forest_regressor.fit(x_train, y_train)
-
 
                 with open(MINIMAL_PATH, 'a') as f:
                     f.write(
