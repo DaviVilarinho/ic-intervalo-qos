@@ -15,7 +15,7 @@ from sklearn.model_selection import train_test_split
 from dataset_management import parse_traces
 warnings.filterwarnings('ignore')
 
-IS_LOCAL = os.uname()[1].split('-').pop(0) == "ST"
+IS_LOCAL = False #os.uname()[1].split('-').pop(0) == "ST"
 RANDOM_STATE = 42 if IS_LOCAL else None
 EXPERIMENT = "stepwise_mix"
 
