@@ -1,7 +1,7 @@
 from os import uname
 from datetime import datetime
 
-IS_LOCAL = uname()[1] == "ST-F-01"
+IS_LOCAL = False #uname()[1] == "ST-F-01"
 NROWS = 20 if IS_LOCAL else None
 PASQUINIS_PATH = "../traces-netsoft-2017"
 DATE = datetime.now().isoformat(timespec='seconds')

@@ -21,7 +21,7 @@ EXPERIMENT = "stepwise_mix"
 
 PASQUINIS_PATH = "../traces-netsoft-2017"
 DATE = datetime.now().isoformat(timespec='seconds')
-BASE_RESULTS_PATH = f'{"." if not IS_LOCAL else "/tmp"}/{EXPERIMENT}/{DATE}'
+BASE_RESULTS_PATH = f'{"/tmp" if not IS_LOCAL else "/tmp"}/{EXPERIMENT}/{DATE}'
 
 traces_names = {
     "VOD": [
@@ -71,7 +71,9 @@ def stepwise_selection(x_trace, y_dataset, y_metric, regressor):
     while True:
         features_available = list(
             filter(lambda f: f not in x_trace_minimal.columns, x_trace.columns))
+        print(f'Evaluating {len(features_available)} features left')
         if len(features_available) == 0:
+            print("No features available, breaking")
             break
         nmae_appending_feature_to_the_combination = {
             feature: 1 for feature in features_available}
@@ -92,6 +94,8 @@ def stepwise_selection(x_trace, y_dataset, y_metric, regressor):
         lowest_nmae_from_appending = min(
             nmae_appending_feature_to_the_combination, key=nmae_appending_feature_to_the_combination.get)
         if nmae_appending_feature_to_the_combination[lowest_nmae_from_appending] > old_reg_tree_nmae:
+            print(
+                f'*Not* Appending {lowest_nmae_from_appending} because the NMAE with it is {nmae_appending_feature_to_the_combination[lowest_nmae_from_appending]} > {old_reg_tree_nmae} (old).')
             break
 
         print(
@@ -122,11 +126,11 @@ for trace_family, traces in traces_names.items():
 
             selectK.set_output(transform="pandas")
 
-            minimal_dataset = selectK.fit_transform(x_trace, y_dataset)
+            dataset_best_k = selectK.fit_transform(x_trace, y_dataset)
 
             for regressor in [DecisionTreeRegressor(), RandomForestRegressor(n_estimators=120, random_state=42, n_jobs=-1)]:
                 minimal_dataset = stepwise_selection(
-                    minimal_dataset, y_dataset, y_metric, regressor)
+                    dataset_best_k, y_dataset, y_metric, regressor)
 
                 best_k.append(list(minimal_dataset.columns))
 
@@ -146,7 +150,7 @@ for trace_family, traces in traces_names.items():
                     f.write(
                         f'{trace_load},{trace_apps},{y_metric},RF,{regressor},{nmae(random_forest_regressor.predict(x_test), y_test[y_metric])},\n')
 
-                print(f'minimized {trace_load},{trace_apps},{y_metric},RF')
+                print(f'minimized {trace_load},{trace_apps},{y_metric}')
 
                 with open(BEST_K_PATH, 'a') as f:
                     f.write(f'{best_k},\n')
