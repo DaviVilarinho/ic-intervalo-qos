@@ -14,9 +14,9 @@ IS_LOCAL = os.uname()[1].split('-').pop(0) == "ST"
 RANDOM_STATE = 42 if IS_LOCAL else None
 EXPERIMENT = "histograms-and-cdfs"
 
-PASQUINIS_PATH = "../traces-netsoft-2017"
+PASQUINIS_PATH = "./traces-netsoft-2017"
 DATE = datetime.now().isoformat(timespec='seconds')
-BASE_RESULTS_PATH = f'{EXPERIMENT}/{DATE}'
+BASE_RESULTS_PATH = f'/tmp/{EXPERIMENT}/{DATE}'
 
 traces = {
     "VOD": [
