@@ -58,8 +58,6 @@ y_metrics = {
     "KV": ["ReadsAvg", "WritesAvg"]
 }
 
-sign_and_send_pubkey: signing failed for RSA "/home/dv/.ssh/id_rsa" from agent: agent refused operation
-
 
 SWITCH_PORTS = {
     "SWC1": [0, 1, 2, 3, 4],
