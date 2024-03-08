@@ -228,7 +228,7 @@ for trace_family, traces in traces.items():
                 selectK.set_output(transform="pandas")
 
                 x_train, x_test, y_train, y_test = train_test_split(
-                    minimal_dataset, y_filtered, test_size=TEST_SIZE, random_state=RANDOM_STATE)
+                    x_trace, y_dataset, test_size=TEST_SIZE, random_state=RANDOM_STATE)
 
                 x_train, y_train = filter_periodic(x_train, y_train, period)
 
