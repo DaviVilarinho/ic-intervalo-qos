@@ -15,9 +15,9 @@ from sklearn.model_selection import train_test_split
 from dataset_management import parse_traces
 warnings.filterwarnings('ignore')
 
-IS_LOCAL = os.uname()[1].split('-').pop(0) == "ST"
+IS_LOCAL = False# os.uname()[1].split('-').pop(0) == "ST"
 RANDOM_STATE = 42 if IS_LOCAL else None
-EXPERIMENT = "agg_periodic_experiment"
+EXPERIMENT = "agg_function_periodic_experiment"
 
 PASQUINIS_PATH = "../traces-netsoft-2017"
 DATE = datetime.now().isoformat(timespec='seconds')
@@ -49,7 +49,7 @@ for paths in [results_path]:
         pass
 
 y_metrics = {
-    "VOD": ['DispFrames', 'noAudioPlayed'],
+    "VOD": ['DispFrames', ]#'noAudioPlayed'],
 }
 
 SWITCH_PORTS = {
@@ -105,17 +105,15 @@ with open(BEST_K_PATH, 'w') as f:
 
 
 def filter_agg_periodic(x, y, period: int, func):
-    x_filtered = []
-    y_filtered = []
+    x_filtered = pd.DataFrame(columns=x.columns)
+    y_filtered = pd.DataFrame(columns=y.columns)
+
+    index = 0
 
     for i in range(0, len(x) - period + 1, period):
-        x_agg = func(x.iloc[i:i + period])
-        y_agg = func(y.iloc[i:i + period])
-        x_filtered.append(x_agg)
-        y_filtered.append(y_agg)
-
-    x_filtered = pd.DataFrame(x_filtered, columns=x.columns)
-    y_filtered = pd.DataFrame(y_filtered, columns=y.columns)
+        x_filtered.loc[index] = x.iloc[i:i + period].apply(func)
+        y_filtered.loc[index] = y.iloc[i:i + period].apply(func)
+        index += 1
 
     return x_filtered, y_filtered
 
