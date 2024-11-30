@@ -1,7 +1,6 @@
 import pandas as pd
 import os
 import numpy as np
-from datetime import datetime
 import warnings
 
 from dataset_management import parse_traces
@@ -12,7 +11,7 @@ RANDOM_STATE = 42 if IS_LOCAL else None
 EXPERIMENT = "agg_function_periodic_dataset"
 
 PASQUINIS_PATH = "../traces-netsoft-2017"
-BASE_RESULTS_PATH = f'{"." if not IS_LOCAL else "/tmp"}/{EXPERIMENT}'
+BASE_RESULTS_PATH = f'{EXPERIMENT}'
 
 traces = {
     "VOD": [
@@ -116,9 +115,9 @@ for trace_family, traces in traces.items():
                             per_switch_traces[switch], y_dataset, period, func)
 
                         x_filtered.to_csv(
-                            f'{BASE_RESULTS_PATH}/X_P-{period}_{name}_per-switch-{switch}.csv')
+                            f'{BASE_RESULTS_PATH}/X_{trace}_P-{period}_{name}_per-switch-{switch}.csv')
                         y_filtered.to_csv(
-                            f'{BASE_RESULTS_PATH}/Y_P-{period}_{name}_per-switch-{switch}.csv')
+                            f'{BASE_RESULTS_PATH}/Y_{trace}_P-{period}_{name}_per-switch-{switch}.csv')
                         print(
                             f'done for P-{period}_{name}_per-switch-{switch}')
 
@@ -133,9 +132,9 @@ for trace_family, traces in traces.items():
                             x_trace_per_dataset, y_dataset, period, func)
 
                         x_filtered.to_csv(
-                            f'{BASE_RESULTS_PATH}/X_P-{period}_{name}_per-flow-port.csv')
+                            f'{BASE_RESULTS_PATH}/X_{trace}_{x_file}_P-{period}_{name}_per-flow-port.csv')
                         y_filtered.to_csv(
-                            f'{BASE_RESULTS_PATH}/Y_P-{period}_{name}_per-flow-port.csv')
+                            f'{BASE_RESULTS_PATH}/Y_{trace}_{x_file}_P-{period}_{name}_per-flow-port.csv')
 
                         print(f'done for P-{period}_{name}_per-flow-port')
 
@@ -150,8 +149,8 @@ for trace_family, traces in traces.items():
                         x_trace, y_dataset, period, func)
 
                     x_filtered.to_csv(
-                        f'{BASE_RESULTS_PATH}/X_P-{period}_{name}_total.csv')
+                        f'{BASE_RESULTS_PATH}/X_{trace}_P-{period}_{name}_total.csv')
                     y_filtered.to_csv(
-                        f'{BASE_RESULTS_PATH}/Y_P-{period}_{name}_total.csv')
+                        f'{BASE_RESULTS_PATH}/Y_{trace}_P-{period}_{name}_total.csv')
 
                     print(f'done for P-{period}_{name}_total')
