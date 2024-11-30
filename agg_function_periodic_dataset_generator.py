@@ -1,15 +1,8 @@
-from sklearn.model_selection import train_test_split
-import numpy as np
-from sklearn.feature_selection import f_regression, SelectKBest
-import matplotlib.pyplot as plt
 import pandas as pd
 import os
 import numpy as np
 from datetime import datetime
 import warnings
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import train_test_split
 
 from dataset_management import parse_traces
 warnings.filterwarnings('ignore')
@@ -19,8 +12,7 @@ RANDOM_STATE = 42 if IS_LOCAL else None
 EXPERIMENT = "agg_function_periodic_dataset"
 
 PASQUINIS_PATH = "../traces-netsoft-2017"
-DATE = datetime.now().isoformat(timespec='seconds')
-BASE_RESULTS_PATH = f'{"." if not IS_LOCAL else "/tmp"}/{EXPERIMENT}/{DATE}'
+BASE_RESULTS_PATH = f'{"." if not IS_LOCAL else "/tmp"}/{EXPERIMENT}'
 
 traces = {
     "VOD": [
