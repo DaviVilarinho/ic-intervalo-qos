@@ -4,6 +4,7 @@ import numpy as np
 import warnings
 
 from dataset_management import parse_traces
+from concurrent.futures import ThreadPoolExecutor
 warnings.filterwarnings('ignore')
 
 IS_LOCAL = False
@@ -108,49 +109,65 @@ for trace_family, traces in traces.items():
                 switch = switch_from_port[port]
                 per_switch_traces[switch] = x_trace[[feature]].copy()
 
-            for switch in per_switch_traces.keys():
-                for period in PERIODS:
-                    for name, func in functions:
-                        x_filtered, y_filtered = filter_agg_periodic(
-                            per_switch_traces[switch], y_dataset, period, func)
+            
+            def filter_switch(name, func, period, switch):
+                x_filtered, y_filtered = filter_agg_periodic(
+                    per_switch_traces[switch], y_dataset, period, func)
 
-                        x_filtered.to_csv(
-                            f'{BASE_RESULTS_PATH}/X_{trace}_P-{period}_{name}_per-switch-{switch}.csv')
-                        y_filtered.to_csv(
-                            f'{BASE_RESULTS_PATH}/Y_{trace}_P-{period}_{name}_per-switch-{switch}.csv')
-                        print(
-                            f'done for P-{period}_{name}_per-switch-{switch}')
+                x_filtered.to_csv(
+                    f'{BASE_RESULTS_PATH}/X_{trace}_P-{period}_{name}_per-switch-{switch}.csv')
+                y_filtered.to_csv(
+                    f'{BASE_RESULTS_PATH}/Y_{trace}_P-{period}_{name}_per-switch-{switch}.csv')
+                print(
+                    f'done for P-{period}_{name}_per-switch-{switch}')
+
+            with ThreadPoolExecutor() as executor:
+                for switch in per_switch_traces.keys():
+                    for period in PERIODS:
+                        for name, func in functions:
+                            executor.submit(filter_switch, name, func, period, switch)
 
             # per flow e per port
             for x_file in PER_FILES:
                 x_trace_per_dataset, y_dataset = parse_traces(
                     trace, y_metric, [x_file])
 
-                for period in PERIODS:
-                    for name, func in functions:
-                        x_filtered, y_filtered = filter_agg_periodic(
-                            x_trace_per_dataset, y_dataset, period, func)
 
-                        x_filtered.to_csv(
-                            f'{BASE_RESULTS_PATH}/X_{trace}_{x_file}_P-{period}_{name}_per-flow-port.csv')
-                        y_filtered.to_csv(
-                            f'{BASE_RESULTS_PATH}/Y_{trace}_{x_file}_P-{period}_{name}_per-flow-port.csv')
+                def filter_per_flow_port(name, func, period):
+                    x_filtered, y_filtered = filter_agg_periodic(
+                        x_trace_per_dataset, y_dataset, period, func)
 
-                        print(f'done for P-{period}_{name}_per-flow-port')
+                    x_filtered.to_csv(
+                        f'{BASE_RESULTS_PATH}/X_{trace}_{x_file}_P-{period}_{name}_per-flow-port.csv')
+                    y_filtered.to_csv(
+                        f'{BASE_RESULTS_PATH}/Y_{trace}_{x_file}_P-{period}_{name}_per-flow-port.csv')
+
+                    print(f'done for P-{period}_{name}_per-flow-port')
+
+                with ThreadPoolExecutor() as executor:
+                    for period in PERIODS:
+                        for name, func in functions:
+                            executor.submit(filter_per_flow_port, name, func, period)
 
             # total
 
             x_trace, y_dataset = parse_traces(
                 trace, y_metric, ['X_cluster.csv', 'X_flow.csv', 'X_port.csv'])
 
-            for period in PERIODS:
-                for name, func in functions:
-                    x_filtered, y_filtered = filter_agg_periodic(
-                        x_trace, y_dataset, period, func)
 
-                    x_filtered.to_csv(
-                        f'{BASE_RESULTS_PATH}/X_{trace}_P-{period}_{name}_total.csv')
-                    y_filtered.to_csv(
-                        f'{BASE_RESULTS_PATH}/Y_{trace}_P-{period}_{name}_total.csv')
+            def filter_all(name, func, period):
+                x_filtered, y_filtered = filter_agg_periodic(
+                    x_trace, y_dataset, period, func)
 
-                    print(f'done for P-{period}_{name}_total')
+                x_filtered.to_csv(
+                    f'{BASE_RESULTS_PATH}/X_{trace}_P-{period}_{name}_total.csv')
+                y_filtered.to_csv(
+                    f'{BASE_RESULTS_PATH}/Y_{trace}_P-{period}_{name}_total.csv')
+
+                print(f'done for P-{period}_{name}_total')
+
+            with ThreadPoolExecutor() as executor:
+                for period in PERIODS:
+                    for name, func in functions:
+                        executor.submit(filter_all, name, func, period)
+            
