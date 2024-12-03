@@ -141,12 +141,6 @@ for trace_family, traces in traces.items():
             per_switch_traces = {switch: pd.DataFrame()
                                  for switch in SWITCH_PORTS.keys()}
 
-            for feature in x_trace.columns:
-                port = feature.split('_')[0]
-                switch = switch_from_port[port]
-                per_switch_traces[switch] = x_trace[[feature]].copy()
-
-
             for switch in per_switch_traces.keys():
                 for period in PERIODS:
                     for name, func in functions:
