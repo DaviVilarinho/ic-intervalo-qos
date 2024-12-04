@@ -17,7 +17,7 @@ warnings.filterwarnings('ignore')
 
 IS_LOCAL = False # os.uname()[1].split('-').pop(0) == "ST"
 RANDOM_STATE = 42
-EXPERIMENT = "agg_function_periodic_experiment_tptt_y_by_function"
+EXPERIMENT = "agg_function_periodic_experiment_tptt"
 
 PASQUINIS_PATH = "../traces-netsoft-2017"
 DATE = datetime.now().isoformat(timespec='seconds')
@@ -144,9 +144,6 @@ for trace_family, traces in traces.items():
                 for name, func in functions:
                     _, x_test, _, y_test = train_test_split(
                         x_trace, y_dataset, test_size=TEST_SIZE, random_state=RANDOM_STATE)
-
-                    x_test.set_index('TimeStamp', inplace=True)
-                    y_test.set_index('TimeStamp', inplace=True)
 
                     x_filtered = pd.read_csv(
                         f'{DATASET_PATH}/X_{trace}_P-{period}_{name}_total.csv', index_col="TimeStamp")
