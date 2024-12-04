@@ -15,15 +15,15 @@ from sklearn.model_selection import train_test_split
 from dataset_management import parse_traces
 warnings.filterwarnings('ignore')
 
-IS_LOCAL = False  # os.uname()[1].split('-').pop(0) == "ST"
+IS_LOCAL = False # os.uname()[1].split('-').pop(0) == "ST"
 RANDOM_STATE = 42
-EXPERIMENT = "agg_function_periodic_experiment"
+EXPERIMENT = "agg_function_periodic_experiment_tptt_y_by_function"
 
 PASQUINIS_PATH = "../traces-netsoft-2017"
 DATE = datetime.now().isoformat(timespec='seconds')
 BASE_RESULTS_PATH = f'{"." if not IS_LOCAL else "/tmp"}/{EXPERIMENT}/{DATE}'
 
-AGG_DATASET_PATH = "agg_function_periodic_dataset"
+DATASET_PATH = "agg_function_periodic_dataset"
 
 traces = {
     "VOD": [
@@ -39,7 +39,6 @@ NROWS = None if IS_LOCAL else None
 TEST_SIZE = 0.3
 RANDOM_FOREST_TREES = 120
 
-
 def nmae(y_pred, y_test):
     return abs(y_pred - y_test).mean() / y_test.mean()
 
@@ -52,7 +51,7 @@ for paths in [results_path]:
         pass
 
 y_metrics = {
-    "VOD": ['DispFrames', ]  # 'noAudioPlayed'],
+    "VOD": ['DispFrames',]# 'noAudioPlayed'],
 }
 
 SWITCH_PORTS = {
@@ -85,7 +84,6 @@ with open(per_switch_file, 'w') as f:
 def get_per_file_name(per_file_csv):
     return f'{BASE_RESULTS_PATH}/per_{per_file_csv.split(".")[0]}.csv'
 
-
 PER_FILES = ['X_flow.csv', 'X_port.csv']
 
 for x_file in PER_FILES:
@@ -108,7 +106,20 @@ with open(BEST_K_PATH, 'w') as f:
     f.write(f'período,função,Features,\n')
 
 
-PERIODS = [2, 4, 8, 16, 32, 64, 128, 256]
+def filter_agg_periodic(x, y, period: int, func):
+    x_filtered = pd.DataFrame(columns=x.columns)
+    y_filtered = pd.DataFrame(columns=y.columns)
+
+    index = 0
+
+    for i in range(0, len(x) - period + 1, period):
+        x_filtered.loc[index] = x.iloc[i:i + period].apply(func)
+        y_filtered.loc[index] = y.iloc[i:i + period].apply(func)
+        index += 1
+
+    return x_filtered, y_filtered
+
+PERIODS = [2,4,8,16,32,64,128,256]
 PERIODS.reverse()
 
 functions = [
@@ -124,81 +135,31 @@ for trace_family, traces in traces.items():
         trace_load = trace_name_decomposition[2]
 
         for y_metric in y_metrics[trace_family]:
-            # per switch
-
-            x_trace, y_dataset = parse_traces(trace, y_metric, ['X_port.csv'])
-
-            per_switch_traces = {switch: pd.DataFrame()
-                                 for switch in SWITCH_PORTS.keys()}
-
-            for switch in per_switch_traces.keys():
-                for period in PERIODS:
-                    for name, func in functions:
-                        x_filtered, y_filtered = pd.read_csv(
-                            f'{BASE_RESULTS_PATH}/X_{trace}_P-{period}_{name}_per-switch-{
-                                switch}.csv'), pd.read_csv(
-                            f'{BASE_RESULTS_PATH}/Y_{trace}_P-{period}_{name}_per-switch-{switch}.csv')
-
-                        x_train, x_test, y_train, y_test = train_test_split(
-                            x_filtered, y_filtered, test_size=TEST_SIZE, random_state=RANDOM_STATE)
-
-                        regression_tree_regressor = DecisionTreeRegressor()
-                        regression_tree_regressor.fit(x_train, y_train)
-
-                        random_forest_regressor = RandomForestRegressor(
-                            n_estimators=RANDOM_FOREST_TREES, random_state=RANDOM_STATE, n_jobs=-1)
-                        random_forest_regressor.fit(x_train, y_train)
-
-                        with open(per_switch_file, 'a') as f:
-                            f.write(
-                                f'{period},{name},{trace_load},{trace_apps},{y_metric},RT,{switch},{nmae(regression_tree_regressor.predict(x_test), y_test[y_metric])},\n')
-                            f.write(
-                                f'{period},{name},{trace_load},{trace_apps},{y_metric},RF,{switch},{nmae(random_forest_regressor.predict(x_test), y_test[y_metric])},\n')
-                        print(f'{period},{name},{trace_load},{
-                              trace_apps},{y_metric},RF,{switch}')
-
-            # per flow e per port
-
-            for x_file in PER_FILES:
-                per_dataset_file = get_per_file_name(x_file)
-
-                for period in PERIODS:
-                    for name, func in functions:
-                        x_filtered = pd.read_csv(
-                            f'{BASE_RESULTS_PATH}/X_{trace}_{x_file}_P-{period}_{name}_per-flow-port.csv')
-                        y_filtered = pd.read_csv(
-                            f'{BASE_RESULTS_PATH}/Y_{trace}_{x_file}_P-{period}_{name}_per-flow-port.csv')
-
-                        x_train, x_test, y_train, y_test = train_test_split(
-                            x_filtered, y_filtered, test_size=TEST_SIZE, random_state=RANDOM_STATE)
-
-                        regression_tree_regressor = DecisionTreeRegressor()
-                        regression_tree_regressor.fit(x_train, y_train)
-
-                        random_forest_regressor = RandomForestRegressor(
-                            n_estimators=RANDOM_FOREST_TREES, random_state=RANDOM_STATE, n_jobs=-1)
-                        random_forest_regressor.fit(x_train, y_train)
-
-                        with open(per_dataset_file, 'a') as f:
-                            f.write(
-                                f'{period},{name},{trace_load},{trace_apps},{y_metric},RT,{nmae(regression_tree_regressor.predict(x_test), y_test[y_metric])},\n')
-                            f.write(
-                                f'{period},{name},{trace_load},{trace_apps},{y_metric},RF,{nmae(random_forest_regressor.predict(x_test), y_test[y_metric])},\n')
-                        print(f'per file {per_dataset_file} {period},{
-                              name},{trace_load},{trace_apps},{y_metric},RF')
-
-            # larger after
-
             # total
+
+            x_trace, y_dataset = parse_traces(
+                trace, y_metric, ['X_cluster.csv', 'X_flow.csv', 'X_port.csv'])
 
             for period in PERIODS:
                 for name, func in functions:
+                    _, x_test, _, y_test = train_test_split(
+                        x_trace, y_dataset, test_size=TEST_SIZE, random_state=RANDOM_STATE)
+
+                    x_test.set_index('TimeStamp', inplace=True)
+                    y_test.set_index('TimeStamp', inplace=True)
+
                     x_filtered = pd.read_csv(
-                        f'{BASE_RESULTS_PATH}/X_{trace}_P-{period}_{name}_total.csv')
+                        f'{DATASET_PATH}/X_{trace}_P-{period}_{name}_total.csv', index_col="TimeStamp")
                     y_filtered = pd.read_csv(
-                        f'{BASE_RESULTS_PATH}/Y_{trace}_P-{period}_{name}_total.csv')
-                    x_train, x_test, y_train, y_test = train_test_split(
+                        f'{DATASET_PATH}/Y_{trace}_P-{period}_{name}_total.csv', index_col="TimeStamp")
+
+                    x_train, _, y_train, _ = train_test_split(
                         x_filtered, y_filtered, test_size=TEST_SIZE, random_state=RANDOM_STATE)
+
+                    indexes_to_exclude = x_test.index
+
+                    x_train.drop(index=indexes_to_exclude, errors='ignore', inplace=True)
+                    y_train.drop(index=indexes_to_exclude, errors='ignore', inplace=True)
 
                     regression_tree_regressor = DecisionTreeRegressor()
                     regression_tree_regressor.fit(x_train, y_train)
@@ -212,8 +173,8 @@ for trace_family, traces in traces.items():
                             f'{period},{name},{trace_load},{trace_apps},{y_metric},RT,{nmae(regression_tree_regressor.predict(x_test), y_test[y_metric])},\n')
                         f.write(
                             f'{period},{name},{trace_load},{trace_apps},{y_metric},RF,{nmae(random_forest_regressor.predict(x_test), y_test[y_metric])},\n')
-                    print(f'total X {period},{name},{
-                          trace_load},{trace_apps},{y_metric},RF')
+                    print(f'total X {period},{name},{trace_load},{trace_apps},{y_metric},RF')
+
 
                     # minimal
                     k = 12
@@ -222,12 +183,11 @@ for trace_family, traces in traces.items():
 
                     selectK.set_output(transform="pandas")
 
-                    minimal_dataset = selectK.fit_transform(
-                        x_filtered, y_filtered)
+                    minimal_dataset = selectK.fit_transform(x_train, y_train)
                     best_k.append(list(minimal_dataset.columns))
 
-                    x_train, x_test, y_train, y_test = train_test_split(
-                        minimal_dataset, y_filtered, test_size=TEST_SIZE, random_state=RANDOM_STATE)
+                    x_train, _, y_train, _ = train_test_split(
+                        minimal_dataset, y_train, test_size=TEST_SIZE, random_state=RANDOM_STATE)
 
                     regression_tree_regressor = DecisionTreeRegressor()
                     regression_tree_regressor.fit(x_train, y_train)
@@ -236,14 +196,14 @@ for trace_family, traces in traces.items():
                         n_estimators=RANDOM_FOREST_TREES, random_state=RANDOM_STATE, n_jobs=-1)
                     random_forest_regressor.fit(x_train, y_train)
 
+
                     with open(MINIMAL_PATH, 'a') as f:
                         f.write(
                             f'{period},{name},{trace_load},{trace_apps},{y_metric},RT,{nmae(regression_tree_regressor.predict(x_test), y_test[y_metric])},\n')
                         f.write(
                             f'{period},{name},{trace_load},{trace_apps},{y_metric},RF,{nmae(random_forest_regressor.predict(x_test), y_test[y_metric])},\n')
 
-                    print(f'univariate {period},{name},{
-                          trace_load},{trace_apps},{y_metric},RF')
+                    print(f'univariate {period},{name},{trace_load},{trace_apps},{y_metric},RF')
 
                     with open(BEST_K_PATH, 'a') as f:
                         f.write(f'{period},{name},{best_k},\n')
