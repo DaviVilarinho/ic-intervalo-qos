@@ -1,3 +1,4 @@
+from numba import njit, jit, prange
 import pandas as pd
 import os
 import numpy as np
@@ -36,47 +37,49 @@ y_metrics = {
 
 def filter_agg_periodic(x, y, period: int):
     x_agg = x.rolling(period, step=period).apply(
-        calc_mean, raw=True).dropna()
+        mean_numba, engine='numba', raw=True).dropna()
     y_agg = y.rolling(period, step=period).apply(
-        calc_mean, raw=True).dropna()
+        mean_numba, engine='numba', raw=True).dropna()
 
     x_std = x.rolling(period, step=period).apply(
-        std_calc, raw=True).dropna()
+        std_numba, engine='numba', raw=True).dropna()
     y_std = y.rolling(period, step=period).apply(
-        std_calc, raw=True).dropna()
+        std_numba, engine='numba', raw=True).dropna()
 
     x_median = x.rolling(period, step=period).apply(
-        median_calc, raw=True).dropna()
+        median_numba, engine='numba', raw=True).dropna()
     y_median = y.rolling(period, step=period).apply(
-        median_calc, raw=True).dropna()
+        median_numba, engine='numba', raw=True).dropna()
 
     x_skew = x.rolling(period, step=period).apply(
-        skew_calc, raw=True).dropna()
+        skew_numba, engine='numba', raw=True).dropna()
     y_skew = y.rolling(period, step=period).apply(
-        skew_calc, raw=True).dropna()
+        skew_numba, engine='numba', raw=True).dropna()
 
     x_kurt = x.rolling(period, step=period).apply(
-        kurtosis_calc, raw=True).dropna()
+        kurtosis_numba, engine='numba', raw=True).dropna()
     y_kurt = y.rolling(period, step=period).apply(
-        kurtosis_calc, raw=True).dropna()
+        kurtosis_numba, engine='numba', raw=True).dropna()
 
     x_25th = x.rolling(period, step=period).apply(
-        percentile_25_calc, raw=True).dropna()
+        percentile_25_numba, engine='numba', raw=True).dropna()
     y_25th = y.rolling(period, step=period).apply(
-        percentile_25_calc, raw=True).dropna()
+        percentile_25_numba, engine='numba', raw=True).dropna()
 
     x_75th = x.rolling(period, step=period).apply(
-        percentile_75_calc, raw=True).dropna()
+        percentile_75_numba, engine='numba', raw=True).dropna()
     y_75th = y.rolling(period, step=period).apply(
-        percentile_75_calc, raw=True).dropna()
+        percentile_75_numba, engine='numba', raw=True).dropna()
 
     x_range = x.rolling(period, step=period).apply(
-        range_calc, raw=True).dropna()
+        range_numba, engine='numba', raw=True).dropna()
     y_range = y.rolling(period, step=period).apply(
-        range_calc, raw=True).dropna()
+        range_numba, engine='numba', raw=True).dropna()
 
-    return (x_agg, x_std, x_median, x_skew, x_kurt, x_25th, x_75th, x_range), \
-           (y_agg, y_std, y_median, y_skew, y_kurt, y_25th, y_75th, y_range)
+    x_dataset = pd.concat([x_agg, x_std, x_median, x_skew, x_kurt, x_25th, x_75th, x_range], axis=1)
+    y_dataset = pd.concat([y_agg, y_std, y_median, y_skew, y_kurt, y_25th, y_75th, y_range], axis=1)
+
+    return x_dataset, y_dataset
 
 
 PERIODS = [
@@ -87,35 +90,46 @@ PERIODS = [
 PERIODS.reverse()
 
 
-def calc_mean(x):
+@njit(nogil=True)
+def mean_numba(x):
     return np.sum(x) / x.size
 
 
-def std_calc(x):
-    return np.sqrt(np.sum((x - calc_mean(x)) ** 2) / x.size)
+@njit(nogil=True)
+def std_numba(x):
+    return np.sqrt(np.sum((x - mean_numba(x)) ** 2) / x.size)
 
 
-def median_calc(x):
+@njit(nogil=True)
+def median_numba(x):
     return np.median(x)
 
-
-def skew_calc(x):
-    return skew(x)
-
-
-def kurtosis_calc(x):
-    return kurtosis(x)
+@njit(nogil=True)
+def skew_numba(x):
+    mean_x = mean_numba(x)
+    std_x = std_numba(x)
+    return np.sum(((x - mean_x) / std_x) ** 3) / x.size
 
 
-def percentile_25_calc(x):
+@njit(nogil=True)
+def kurtosis_numba(x):
+    mean_x = mean_numba(x)
+    std_x = std_numba(x)
+    return np.sum(((x - mean_x) / std_x) ** 4) / x.size - 3
+
+
+@njit(nogil=True)
+def percentile_25_numba(x):
     return np.percentile(x, 25)
 
 
-def percentile_75_calc(x):
+@njit(nogil=True)
+def percentile_75_numba(x):
     return np.percentile(x, 75)
 
 
-def range_calc(x):
+@njit(nogil=True)
+def range_numba(x):
     return np.ptp(x)
 
 
