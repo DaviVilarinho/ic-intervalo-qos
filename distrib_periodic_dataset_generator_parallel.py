@@ -34,6 +34,9 @@ y_metrics = {
     "VOD": ['DispFrames', ]  # 'noAudioPlayed'],
 }
 
+def rename_columns(df, suffix):
+    return df.rename(columns=lambda col: f"{col}_{suffix}")
+
 
 def filter_agg_periodic(x, y, period: int):
     x_agg = x.rolling(period, step=period).apply(
@@ -75,6 +78,23 @@ def filter_agg_periodic(x, y, period: int):
         range_numba, engine='numba', raw=True).dropna()
     y_range = y.rolling(period, step=period).apply(
         range_numba, engine='numba', raw=True).dropna()
+
+    x_agg = rename_columns(x_agg, 'mean')
+    y_agg = rename_columns(y_agg, 'mean')
+    x_std = rename_columns(x_std, 'std')
+    y_std = rename_columns(y_std, 'std')
+    x_median = rename_columns(x_median, 'median')
+    y_median = rename_columns(y_median, 'median')
+    x_skew = rename_columns(x_skew, 'skew')
+    y_skew = rename_columns(y_skew, 'skew')
+    x_kurt = rename_columns(x_kurt, 'kurt')
+    y_kurt = rename_columns(y_kurt, 'kurt')
+    x_25th = rename_columns(x_25th, '25th')
+    y_25th = rename_columns(y_25th, '25th')
+    x_75th = rename_columns(x_75th, '75th')
+    y_75th = rename_columns(y_75th, '75th')
+    x_range = rename_columns(x_range, 'range')
+    y_range = rename_columns(y_range, 'range')
 
     x_dataset = pd.concat([x_agg, x_std, x_median, x_skew, x_kurt, x_25th, x_75th, x_range], axis=1)
     y_dataset = pd.concat([y_agg, y_std, y_median, y_skew, y_kurt, y_25th, y_75th, y_range], axis=1)
