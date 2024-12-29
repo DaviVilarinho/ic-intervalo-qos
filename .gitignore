@@ -10,3 +10,4 @@ __pycache__/
 .ipynb_checkpoints/
 
 agg_function_periodic_dataset/
+distrib_function_periodic_dataset/
