@@ -64,6 +64,14 @@ TOTAL_X_FILE_PATH = f'{BASE_RESULTS_PATH}/total_X.csv'
 with open(TOTAL_X_FILE_PATH, 'w') as f:
     f.write(f'período,carga,apps,feature,método,nmae,\n')
 
+MINIMAL_PATH = f'{BASE_RESULTS_PATH}/minimal_with_univariate.csv'
+with open(MINIMAL_PATH, 'w') as f:
+    f.write(f'período,carga,apps,feature,método,nmae\n')
+
+BEST_K_PATH = f'{BASE_RESULTS_PATH}/best_k.csv'
+with open(BEST_K_PATH, 'w') as f:
+    f.write(f'período,Features,\n')
+
 
 def filter_periodic(x, y, period: int):
     mask = (x.index % period == 0)
@@ -115,4 +123,33 @@ for trace_family, traces in traces.items():
                     f.write(
                         f'{period},{trace_load},{trace_apps},{y_metric},RF,{nmae(random_forest_regressor.predict(x_test), y_test[y_metric])},\n')
                 print(f'total X {period},{trace_load},{trace_apps},{y_metric},RF')
+
+                k = 12
+                best_k = []
+                selectK = SelectKBest(f_regression, k=k)
+
+                selectK.set_output(transform="pandas")
+
+                minimal_dataset = selectK.fit_transform(x_train, y_train)
+                best_k.append(list(minimal_dataset.columns))
+
+                x_test_minimal = x_test[minimal_dataset.columns]
+
+                regression_tree_regressor = DecisionTreeRegressor()
+                regression_tree_regressor.fit(minimal_dataset, y_train)
+
+                random_forest_regressor = RandomForestRegressor(
+                    n_estimators=RANDOM_FOREST_TREES, random_state=RANDOM_STATE, n_jobs=-1)
+                random_forest_regressor.fit(minimal_dataset, y_train)
+
+                with open(MINIMAL_PATH, 'a') as f:
+                    f.write(
+                        f'{period},{trace_load},{trace_apps},{y_metric},RT,{nmae(regression_tree_regressor.predict(x_test_minimal), y_test[y_metric])},\n')
+                    f.write(
+                        f'{period},{trace_load},{trace_apps},{y_metric},RF,{nmae(random_forest_regressor.predict(x_test_minimal), y_test[y_metric])},\n')
+
+                print(f'univariate {period},{trace_load},{trace_apps},{y_metric},RF')
+
+                with open(BEST_K_PATH, 'a') as f:
+                    f.write(f'{period},{best_k},\n')
 

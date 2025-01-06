@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from numba import njit, jit
 from scipy.stats import skew, kurtosis
+from sklearn.feature_selection import f_regression, SelectKBest
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
@@ -47,6 +48,14 @@ for paths in [results_path]:
     except FileExistsError:
         pass
 
+MINIMAL_PATH = f'{BASE_RESULTS_PATH}/minimal_with_univariate.csv'
+with open(MINIMAL_PATH, 'w') as f:
+    f.write(f'período,função,carga,apps,feature,método,nmae\n')
+
+BEST_K_PATH = f'{BASE_RESULTS_PATH}/best_k.csv'
+with open(BEST_K_PATH, 'w') as f:
+    f.write(f'período,função,Features,\n')
+
 y_metrics = {
     "VOD": ['DispFrames',]  # 'noAudioPlayed'],
 }
@@ -77,6 +86,8 @@ for trace_family, traces in traces.items():
                 x_filtered = pd.read_csv(
                     f'{DATASET_PATH}/X_{trace}_P-{period}_total.csv', index_col="TimeStamp")
                 y_filtered = y_dataset.loc[x_filtered.index]
+                x_filtered = x_filtered.fillna(0)
+                y_filtered = y_filtered.fillna(0)
 
                 x_train, x_test, y_train, y_test = train_test_split(
                     x_filtered, y_filtered, test_size=TEST_SIZE, random_state=RANDOM_STATE)
@@ -94,3 +105,33 @@ for trace_family, traces in traces.items():
                     f.write(
                         f'{period},{trace_load},{trace_apps},{y_metric},RF,{nmae(random_forest_regressor.predict(x_test), y_test[y_metric])},\n')
                 print(f'total X {period},{trace_load},{trace_apps},{y_metric}')
+
+                
+                k = 12
+                best_k = []
+                selectK = SelectKBest(f_regression, k=k)
+
+                selectK.set_output(transform="pandas")
+
+                minimal_dataset = selectK.fit_transform(x_train, y_train)
+                best_k.append(list(minimal_dataset.columns))
+
+                x_test_minimal = x_test[minimal_dataset.columns]
+
+                regression_tree_regressor = DecisionTreeRegressor()
+                regression_tree_regressor.fit(minimal_dataset, y_train)
+
+                random_forest_regressor = RandomForestRegressor(
+                    n_estimators=RANDOM_FOREST_TREES, random_state=RANDOM_STATE, n_jobs=-1)
+                random_forest_regressor.fit(minimal_dataset, y_train)
+
+                with open(MINIMAL_PATH, 'a') as f:
+                    f.write(
+                        f'{period},{trace_load},{trace_apps},{y_metric},RT,{nmae(regression_tree_regressor.predict(x_test_minimal), y_test[y_metric])},\n')
+                    f.write(
+                        f'{period},{trace_load},{trace_apps},{y_metric},RF,{nmae(random_forest_regressor.predict(x_test_minimal), y_test[y_metric])},\n')
+
+                print(f'univariate {period},{trace_load},{trace_apps},{y_metric},RF')
+
+                with open(BEST_K_PATH, 'a') as f:
+                    f.write(f'{period},{best_k},\n')
