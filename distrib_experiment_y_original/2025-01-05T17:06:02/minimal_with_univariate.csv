@@ -1,4 +1,4 @@
-período,função,carga,apps,feature,método,nmae
+período,função,carga,apps,método,nmae,
 256,FlashcrowdLoad,BothApps,DispFrames,RT,0.12005277044854881,
 256,FlashcrowdLoad,BothApps,DispFrames,RF,0.10043975373790678,
 128,FlashcrowdLoad,BothApps,DispFrames,RT,0.11672131147540983,
