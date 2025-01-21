@@ -15,13 +15,13 @@ warnings.filterwarnings('ignore')
 
 IS_LOCAL = False
 RANDOM_STATE = 42
-EXPERIMENT = "distrib_experiment_y_original"
+EXPERIMENT = "distrib_tptt_experiment_y_original"
 
 PASQUINIS_PATH = "../traces-netsoft-2017"
 DATE = datetime.now().isoformat(timespec='seconds')
 BASE_RESULTS_PATH = f'{"." if not IS_LOCAL else "/tmp"}/{EXPERIMENT}/{DATE}'
 
-DATASET_PATH = "distrib_tptt_function_periodic_dataset"
+DATASET_PATH = "distrib_function_periodic_dataset"
 
 traces = {
     "VOD": [
@@ -95,10 +95,10 @@ for trace_family, traces in traces.items():
                 x_train, _, y_train, _ = train_test_split(
                     x_filtered, y_filtered, test_size=TEST_SIZE, random_state=RANDOM_STATE)
 
-                x_test = x_test.sample(n=int(len(x_train) * 0.3 / 0.7), random_state=RANDOM_STATE)
+                x_test = x_test.iloc[period:].sample(n=int(len(x_train) * 0.3 / 0.7), random_state=RANDOM_STATE)
                 y_test = y_test.loc[x_test.index]
                 original_indices = x_trace.index.get_indexer(x_test.index)
-                x_test = x_filtered.iloc[original_indices // period]
+                x_test = x_filtered.iloc[((original_indices // period) - 1).clip(0)]
 
                 regression_tree_regressor = DecisionTreeRegressor()
                 regression_tree_regressor.fit(x_train, y_train)
