@@ -102,13 +102,10 @@ for trace_family, traces in traces.items():
                 x_train, _, y_train, _ = train_test_split(
                     x_filtered, y_filtered, test_size=TEST_SIZE, random_state=RANDOM_STATE)
 
-                indexes_to_exclude = x_test.index
-
-                x_train.drop(index=indexes_to_exclude, errors='ignore', inplace=True)
-                y_train.drop(index=indexes_to_exclude, errors='ignore', inplace=True)
-
                 x_test = x_test.sample(n=int(len(x_train) * 0.3 / 0.7), random_state=RANDOM_STATE)
                 y_test = y_test.loc[x_test.index]
+                original_indices = x_trace.index.get_indexer(x_test.index)
+                x_test = x_filtered.iloc[(original_indices // period).clip(0, len(x_filtered) - 1)]
 
                 regression_tree_regressor = DecisionTreeRegressor()
                 regression_tree_regressor.fit(x_train, y_train)
