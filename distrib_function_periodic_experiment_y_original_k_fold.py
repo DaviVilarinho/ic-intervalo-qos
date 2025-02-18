@@ -127,11 +127,11 @@ for trace_family, traces in traces.items():
                     y_train, y_test = y_filtered.iloc[train_index], y_filtered.iloc[test_index]
 
                 regression_tree_regressor = DecisionTreeRegressor()
-                regression_tree_regressor.fit(minimal_dataset, y_train)
+                regression_tree_regressor.fit(x_train, y_train)
 
                 random_forest_regressor = RandomForestRegressor(
                     n_estimators=RANDOM_FOREST_TREES, random_state=RANDOM_STATE, n_jobs=-1)
-                random_forest_regressor.fit(minimal_dataset, y_train)
+                random_forest_regressor.fit(x_train, y_train)
 
                 with open(MINIMAL_PATH, 'a') as f:
                     f.write(

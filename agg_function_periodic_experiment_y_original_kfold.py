@@ -16,7 +16,7 @@ warnings.filterwarnings('ignore')
 
 IS_LOCAL = False  # os.uname()[1].split('-').pop(0) == "ST"
 RANDOM_STATE = 42
-EXPERIMENT = "agg_function_periodic_experiment_y_original"
+EXPERIMENT = "agg_function_periodic_experiment_y_original_k_fold"
 
 K_FOLD = 3
 

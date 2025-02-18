@@ -30,11 +30,6 @@ traces = {
         "VoD-BothApps-PeriodicLoad",
         "VoD-SingleApp-FlashcrowdLoad",
         "VoD-SingleApp-PeriodicLoad"],
-    "KV": [
-        "KV-BothApps-FlashcrowdLoad",
-        "KV-BothApps-PeriodicLoad",
-        "KV-SingleApp-FlashcrowdLoad",
-        "KV-SingleApp-PeriodicLoad"]
 }
 
 NROWS = None if IS_LOCAL else None
