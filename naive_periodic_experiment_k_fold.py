@@ -95,22 +95,27 @@ for trace_family, traces in traces.items():
                 kf = KFold(n_splits=K_FOLD, shuffle=True, random_state=RANDOM_STATE)
 
                 # Realizar treinamento e teste com K-Fold  
+                nmae_values_rt = []
+                nmae_values_rf = []
                 for fold, (train_index, test_index) in enumerate(kf.split(x_filtered)):  
                     x_train, x_test = x_filtered.iloc[train_index], x_filtered.iloc[test_index]  
                     y_train, y_test = y_filtered.iloc[train_index], y_filtered.iloc[test_index]
 
-                regression_tree_regressor = DecisionTreeRegressor()
-                regression_tree_regressor.fit(x_train, y_train)
+                    regression_tree_regressor = DecisionTreeRegressor()
+                    regression_tree_regressor.fit(x_train, y_train)
 
-                random_forest_regressor = RandomForestRegressor(
-                    n_estimators=RANDOM_FOREST_TREES, random_state=RANDOM_STATE, n_jobs=-1)
-                random_forest_regressor.fit(x_train, y_train)
+                    random_forest_regressor = RandomForestRegressor(
+                        n_estimators=RANDOM_FOREST_TREES, random_state=RANDOM_STATE, n_jobs=-1)
+                    random_forest_regressor.fit(x_train, y_train)
+
+                    nmae_values_rt.append(nmae(regression_tree_regressor.predict(x_test), y_test[y_metric]))
+                    nmae_values_rf.append(nmae(random_forest_regressor.predict(x_test), y_test[y_metric]))
 
                 with open(TOTAL_X_FILE_PATH, 'a') as f:
                     f.write(
-                        f'{period},{trace_load},{trace_apps},{y_metric},RT,{nmae(regression_tree_regressor.predict(x_test), y_test[y_metric])},\n')
+                        f'{period},{trace_load},{trace_apps},{y_metric},RT,{np.mean(nmae_values_rt)},\n')
                     f.write(
-                        f'{period},{trace_load},{trace_apps},{y_metric},RF,{nmae(random_forest_regressor.predict(x_test), y_test[y_metric])},\n')
+                        f'{period},{trace_load},{trace_apps},{y_metric},RF,{np.mean(nmae_values_rf)},\n')
                 print(f'total X {period},{trace_load},{trace_apps},{y_metric},RF')
 
 
@@ -126,23 +131,27 @@ for trace_family, traces in traces.items():
 
                 kf = KFold(n_splits=K_FOLD, shuffle=True, random_state=RANDOM_STATE)
                 # Realizar treinamento e teste com K-Fold  
+                nmae_values_rt = []
+                nmae_values_rf = []
                 for fold, (train_index, test_index) in enumerate(kf.split(minimal_dataset)):  
                     x_train, x_test = minimal_dataset.iloc[train_index], minimal_dataset.iloc[test_index]  
                     y_train, y_test = y_filtered.iloc[train_index], y_filtered.iloc[test_index]
 
-                regression_tree_regressor = DecisionTreeRegressor()
-                regression_tree_regressor.fit(x_train, y_train)
+                    regression_tree_regressor = DecisionTreeRegressor()
+                    regression_tree_regressor.fit(x_train, y_train)
 
-                random_forest_regressor = RandomForestRegressor(
-                    n_estimators=RANDOM_FOREST_TREES, random_state=RANDOM_STATE, n_jobs=-1)
-                random_forest_regressor.fit(x_train, y_train)
+                    random_forest_regressor = RandomForestRegressor(
+                        n_estimators=RANDOM_FOREST_TREES, random_state=RANDOM_STATE, n_jobs=-1)
+                    random_forest_regressor.fit(x_train, y_train)
 
+                    nmae_values_rt.append(nmae(regression_tree_regressor.predict(x_test), y_test[y_metric]))
+                    nmae_values_rf.append(nmae(random_forest_regressor.predict(x_test), y_test[y_metric]))
 
                 with open(MINIMAL_PATH, 'a') as f:
                     f.write(
-                        f'{period},{trace_load},{trace_apps},{y_metric},RT,{nmae(regression_tree_regressor.predict(x_test), y_test[y_metric])},\n')
+                        f'{period},{trace_load},{trace_apps},{y_metric},RT,{np.mean(nmae_values_rt)},\n')
                     f.write(
-                        f'{period},{trace_load},{trace_apps},{y_metric},RF,{nmae(random_forest_regressor.predict(x_test), y_test[y_metric])},\n')
+                        f'{period},{trace_load},{trace_apps},{y_metric},RF,{np.mean(nmae_values_rf)},\n')
 
                 print(f'univariate {period},{trace_load},{trace_apps},{y_metric},RF')
 
